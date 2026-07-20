@@ -2,102 +2,306 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Фото Рулетка</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Выпадайло — Фото Рулетка</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            background-color: #1c1c1e;
-            color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        html, body { width: 100%; height: 100%; overflow: hidden; touch-action: none; background: #050209; perspective: 1200px; }
+        body { color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative; }
+
+        /* Вращающийся неоновый туман */
+        body::before {
+            content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle at 30% 30%, rgba(127, 0, 255, 0.35) 0%, transparent 45%),
+                        radial-gradient(circle at 70% 70%, rgba(255, 0, 127, 0.35) 0%, transparent 45%);
+            animation: fogMotion 8s linear infinite;
+            z-index: 0; pointer-events: none;
+        }
+        @keyframes fogMotion { 
+            0% { transform: scale(1) rotate(0deg); } 
+            50% { transform: scale(1.1) rotate(180deg); }
+            100% { transform: scale(1) rotate(360deg); } 
+        }
+
+        .screen { display: none; text-align: center; width: 100%; max-width: 400px; z-index: 1; }
+        .active { display: block; }
+        
+        /* Переливающийся текст */
+        h1 { font-size: 2.3rem; text-transform: uppercase; margin-bottom: 5px; font-weight: 900; 
+             background: linear-gradient(90deg, #ff007f, #00f0ff, #7f00ff, #ff007f); 
+             background-size: 300% auto;
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+             animation: textFlow 4s linear infinite; }
+        @keyframes textFlow { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
+        
+        .sub-text { font-size: 0.85rem; color: rgba(255, 255, 255, 0.6); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 25px; }
+
+        .btn { background: linear-gradient(90deg, #ff007f, #7f00ff); border: none; color: white; padding: 18px; border-radius: 50px; width: 100%; font-weight: bold; margin-top: 20px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 0, 127, 0.3); font-size: 1rem; }
+        .upload-zone { display: block; border: 2px dashed #7f00ff; padding: 40px 20px; border-radius: 25px; background: rgba(127, 0, 255, 0.05); cursor: pointer; }
+        .preview-img { width: 100%; max-height: 250px; object-fit: cover; border-radius: 20px; display: none; margin-top: 10px; }
+        
+        /* Рулетка с эффектом виньетки */
+        .roulette-container { 
+            position: relative; width: 100%; height: 130px; 
+            background: rgba(17, 17, 34, 0.9); 
+            border: 2px solid rgba(127, 0, 255, 0.5); 
+            border-radius: 20px; overflow: hidden; margin: 30px 0; 
+        }
+        
+        .roulette-container::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 50px; height: 100%;
+            background: linear-gradient(to right, rgba(5, 2, 9, 1) 0%, rgba(5, 2, 9, 0) 100%);
+            z-index: 4; pointer-events: none;
+        }
+        .roulette-container::after {
+            content: ""; position: absolute; top: 0; right: 0; width: 50px; height: 100%;
+            background: linear-gradient(to left, rgba(5, 2, 9, 1) 0%, rgba(5, 2, 9, 0) 100%);
+            z-index: 4; pointer-events: none;
+        }
+
+        .pointer { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 4px; height: 100%; background: #00f0ff; z-index: 10; box-shadow: 0 0 10px #00f0ff; }
+        .roulette-strip { display: flex; align-items: center; position: absolute; left: 0; top: 15px; height: 100px; transition: transform 4.2s cubic-bezier(0.1, 0.85, 0.22, 1); }
+        
+        .case-item { 
+            width: 80px; height: 80px; margin: 0 10px; 
+            display: flex; align-items: center; justify-content: center; 
+            flex-shrink: 0; background: #1c1c32; 
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 12px;
+            font-size: 2rem;
+        }
+
+        /* 3D Контейнер */
+        .card-perspective {
+            perspective: 1200px;
+            width: 100%;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-            text-align: center;
-        }
-        h1 {
-            font-size: 24px;
             margin-bottom: 20px;
         }
-        .roulette-box {
-            width: 100%;
-            max-width: 320px;
-            background: #2c2c2e;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            margin-bottom: 20px;
+
+        /* Гиро-карточка */
+        .result-card { 
+            position: relative; width: 100%; max-width: 340px; padding: 25px; border-radius: 24px; 
+            background: linear-gradient(135deg, #15162c 0%, #0d0e1a 100%); 
+            border: 2px solid rgba(255,255,255,0.2);
+            transform-style: preserve-3d;
+            overflow: hidden;
+            transform: rotateX(0deg) rotateY(0deg); 
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 40px rgba(127, 0, 255, 0.3);
+            will-change: transform;
         }
-        .effect-display {
-            font-size: 20px;
-            font-weight: bold;
-            color: #0a84ff;
-            min-height: 30px;
-            margin: 15px 0;
+
+        #glint {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle 80px at 50% 50%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.2) 20%, transparent 60%);
+            pointer-events: none; z-index: 5;
+            mix-blend-mode: overlay;
+            opacity: 0.9;
         }
-        button {
-            background-color: #0a84ff;
-            color: white;
-            border: none;
-            padding: 14px 28px;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 12px;
-            cursor: pointer;
-            width: 100%;
-            transition: background-color 0.2s;
+
+        .result-photo { 
+            width: 100%; max-height: 270px; object-fit: cover; border-radius: 16px; margin-bottom: 20px; position: relative; z-index: 1; transition: filter 0.3s ease;
         }
-        button:active {
-            background-color: #0056b3;
-        }
+
+        /* Фильтры обработки фотографий Canvas/CSS */
+        .filter-bw { filter: grayscale(100%); }
+        .filter-sepia { filter: sepia(100%); }
+        .filter-invert { filter: invert(100%); }
+        .filter-blur { filter: blur(5px); }
+        .filter-brightness { filter: brightness(150%); }
+        .filter-pixelate { filter: contrast(150%) hue-rotate(90deg); }
     </style>
 </head>
 <body>
+    <div id="screen-start" class="screen active">
+        <h1>Выпадайло</h1>
+        <div class="sub-text">испытай удачу</div>
+        <button class="btn" onclick="handleStartButton()">Начать</button>
+    </div>
 
-    <h1>🎰 Рулетка Эффектов</h1>
-    
-    <div class="roulette-box">
-        <p>Нажми кнопку, чтобы выбрать случайный эффект для фото!</p>
-        <div id="effect" class="effect-display">???</div>
-        <button onclick="spinRoulette()">Крутить рулетку!</button>
+    <div id="screen-upload" class="screen">
+        <h1>Загрузи фото</h1>
+        <label for="file-input" class="upload-zone">
+            <input type="file" id="file-input" accept="image/*" style="display:none">
+            <span id="upload-text">📸 Выберите фото из галереи</span>
+            <img id="preview" class="preview-img" src="">
+        </label>
+        <button class="btn" id="btn-spin" style="display: none;" onclick="startRoulette()">Крутить рулетку!</button>
+    </div>
+
+    <div id="screen-roulette" class="screen">
+        <h1>Выбираем эффект...</h1>
+        <div class="roulette-container">
+            <div class="pointer"></div>
+            <div class="roulette-strip" id="strip"></div>
+        </div>
+    </div>
+
+    <div id="screen-result" class="screen">
+        <div class="card-perspective">
+            <div id="final-card" class="result-card">
+                <div id="glint"></div>
+                <img id="result-photo" class="result-photo" src="">
+                <div id="rarity-badge" style="padding: 10px; border-radius: 20px; font-weight: bold; margin-bottom: 10px; position: relative; z-index: 1; color: #fff;">Эффект</div>
+                <p id="desc-text" style="font-size: 1.2rem; font-weight: bold; position: relative; z-index: 1;"></p>
+            </div>
+        </div>
+        <button class="btn" onclick="location.reload()">Попробовать снова</button>
     </div>
 
     <script>
+        // Интеграция Telegram WebApp
         if (window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.ready();
             window.Telegram.WebApp.expand();
         }
 
-        // Ровно 6 эффектов:
-        const effects = [
-            "⚪ Чёрно-белое", 
-            "📜 Сепия", 
-            "🌀 Инверсия", 
-            "✨ Размытие", 
-            "🎨 Яркость +50%",
-            "🎭 Пикселизация"
+        let audioCtx = null;
+        let targetX = 0, targetY = 0, currentX = 0, currentY = 0;
+        let gyroActivated = false;
+
+        // 6 уникальных стилей обработки
+        const photoEffects = [
+            { id: "bw", title: "⚪ Чёрно-белое", class: "filter-bw", color: "#8e8e93", icon: "⚪" },
+            { id: "sepia", title: "📜 Сепия", class: "filter-sepia", color: "#d1a153", icon: "📜" },
+            { id: "invert", title: "🌀 Инверсия", class: "filter-invert", color: "#00f0ff", icon: "🌀" },
+            { id: "blur", title: "✨ Размытие", class: "filter-blur", color: "#bf5af2", icon: "✨" },
+            { id: "brightness", title: "🎨 Яркость +50%", class: "filter-brightness", color: "#ff9f0a", icon: "🎨" },
+            { id: "pixelate", title: "🎭 Пикселизация", class: "filter-pixelate", color: "#ff375f", icon: "🎭" }
         ];
 
-        function spinRoulette() {
-            const display = document.getElementById('effect');
-            let counter = 0;
-            
-            const interval = setInterval(() => {
-                const randomTemp = effects[Math.floor(Math.random() * effects.length)];
-                display.innerText = randomTemp;
-                counter++;
+        function initAudio() { 
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); 
+            if (audioCtx.state === 'suspended') audioCtx.resume(); 
+        }
+        
+        function playStartSound() {
+            if(!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.setValueAtTime(200, now);
+            osc.frequency.exponentialRampToValueAtTime(400, now + 0.3);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(now + 0.5);
+        }
+
+        function playTickSound(freq) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        function changeScreen(id) { 
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); 
+            document.getElementById(id).classList.add('active'); 
+        }
+        
+        function handleStartButton() { 
+            initAudio(); 
+            playStartSound();
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().catch(console.error);
+            }
+            changeScreen('screen-upload'); 
+        }
+
+        // Логика 3D гироскопа
+        window.addEventListener('deviceorientation', (e) => {
+            if (!gyroActivated || e.beta === null) return;
+            let normBeta = e.beta - 50; 
+            targetX = Math.max(Math.min(normBeta / 4, 12), -12);
+            targetY = Math.max(Math.min(e.gamma / 3, 12), -12);
+        });
+
+        function updatePhysics() {
+            if (gyroActivated) {
+                const card = document.getElementById('final-card');
+                const glint = document.getElementById('glint');
                 
-                if (counter > 15) {
-                    clearInterval(interval);
-                    const finalEffect = effects[Math.floor(Math.random() * effects.length)];
-                    display.innerText = "🎉 Выпал: " + finalEffect;
+                if (card && card.offsetParent !== null) {
+                    currentX += (targetX - currentX) * 0.1;
+                    currentY += (targetY - currentY) * 0.1;
+
+                    card.style.transform = `rotateX(${currentX}deg) rotateY(${currentY}deg)`;
+                    
+                    card.style.boxShadow = `0 20px 50px rgba(0, 0, 0, 0.9), 
+                                            ${-currentY * 1.5}px ${-currentX * 1.5}px 40px rgba(0, 240, 255, 0.4), 
+                                            ${currentY * 1.5}px ${currentX * 1.5}px 40px rgba(255, 0, 127, 0.4)`;
+
+                    let glintX = 50 + (currentY * 4);
+                    let glintY = 50 - (currentX * 4);
+                    glint.style.background = `radial-gradient(circle 90px at ${glintX}% ${glintY}%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.2) 25%, transparent 65%)`;
                 }
-            }, 100);
+            }
+            requestAnimationFrame(updatePhysics);
+        }
+        requestAnimationFrame(updatePhysics);
+
+        // Превью загружаемого фото
+        document.getElementById('file-input').onchange = function(e) {
+            if (!e.target.files[0]) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                document.getElementById('preview').src = ev.target.result;
+                document.getElementById('preview').style.display = 'block';
+                document.getElementById('upload-text').style.display = 'none';
+                document.getElementById('btn-spin').style.display = 'block';
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+
+        function startRoulette() {
+            changeScreen('screen-roulette');
+            const strip = document.getElementById('strip'); 
+            strip.innerHTML = '';
+            strip.style.transition = "none"; 
+            strip.style.transform = "translate3d(0,0,0)";
+            
+            // Выбираем итоговый выигрышный эффект зарание
+            const winningIndex = Math.floor(Math.random() * photoEffects.length);
+            const winningEffect = photoEffects[winningIndex];
+
+            // Наполняем рулетку и поставяем выигрышный на 21-ю позицию
+            for(let i = 0; i < 25; i++) {
+                let effect = photoEffects[Math.floor(Math.random() * photoEffects.length)];
+                if (i === 21) effect = winningEffect;
+
+                const div = document.createElement('div');
+                div.className = 'case-item';
+                div.innerHTML = effect.icon;
+                strip.appendChild(div);
+
+                if(i < 21) setTimeout(() => playTickSound(400 + i * 15), Math.pow(i / 20, 2.5) * 3500);
+            }
+
+            setTimeout(() => {
+                strip.style.transition = "transform 4.2s cubic-bezier(0.1, 0.85, 0.22, 1)";
+                strip.style.transform = `translate3d(-2100px, 0, 0)`;
+            }, 50);
+
+            // Показ результата с примененным фильтром
+            setTimeout(() => {
+                changeScreen('screen-result');
+                gyroActivated = true;
+                
+                const resultPhoto = document.getElementById('result-photo');
+                resultPhoto.src = document.getElementById('preview').src;
+                resultPhoto.className = 'result-photo ' + winningEffect.class;
+
+                const badge = document.getElementById('rarity-badge');
+                badge.innerText = winningEffect.icon + " " + winningEffect.title;
+                badge.style.backgroundColor = winningEffect.color;
+
+                document.getElementById('desc-text').innerText = "Твоё фото в новом стиле!";
+            }, 4300);
         }
     </script>
 </body>
