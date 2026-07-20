@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фото Рулетка</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background-color: #1c1c1e;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .roulette-box {
+            width: 100%;
+            max-width: 320px;
+            background: #2c2c2e;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+        }
+        .effect-display {
+            font-size: 20px;
+            font-weight: bold;
+            color: #0a84ff;
+            min-height: 30px;
+            margin: 15px 0;
+        }
+        button {
+            background-color: #0a84ff;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+        button:active {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎰 Рулетка Эффектов</h1>
+    
+    <div class="roulette-box">
+        <p>Нажми кнопку, чтобы выбрать случайный эффект для фото!</p>
+        <div id="effect" class="effect-display">???</div>
+        <button onclick="spinRoulette()">Крутить рулетку!</button>
+    </div>
+
+    <script>
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand();
+        }
+
+        // Ровно 6 эффектов:
+        const effects = [
+            "⚪ Чёрно-белое", 
+            "📜 Сепия", 
+            "🌀 Инверсия", 
+            "✨ Размытие", 
+            "🎨 Яркость +50%",
+            "🎭 Пикселизация"
+        ];
+
+        function spinRoulette() {
+            const display = document.getElementById('effect');
+            let counter = 0;
+            
+            const interval = setInterval(() => {
+                const randomTemp = effects[Math.floor(Math.random() * effects.length)];
+                display.innerText = randomTemp;
+                counter++;
+                
+                if (counter > 15) {
+                    clearInterval(interval);
+                    const finalEffect = effects[Math.floor(Math.random() * effects.length)];
+                    display.innerText = "🎉 Выпал: " + finalEffect;
+                }
+            }, 100);
+        }
+    </script>
+</body>
+</html>
