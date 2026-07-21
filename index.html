@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Выпадайло v1.2</title>
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -36,8 +36,9 @@
             align-items: center;
             justify-content: space-between;
             padding: 20px;
+            padding-bottom: calc(20px + env(safe-area-inset-bottom)); /* Поддержка челок/iOS */
             overflow: hidden;
-            perspective: 1000px;
+            perspective: 1200px; /* Усиленная перспектива для 3D наклона */
             position: relative;
         }
 
@@ -78,7 +79,7 @@
             opacity: 0;
             transform: scale(0.9);
             pointer-events: none;
-            display: none;
+            display: none !important;
         }
 
         .welcome-title {
@@ -119,7 +120,17 @@
             transform: scale(0.95);
         }
 
-        /* --- ЭКРАН 2: ИГРОВОЙ ИНТЕРФЕЙС --- */
+        /* Версия только на первом экране, слева снизу */
+        .version-start {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
+            z-index: 10;
+        }
+
+        /* --- ЭКРАН 2: ИГРОВОЙ ИНТЕРФЕЙС / РЕЗУЛЬТАТЫ --- */
         .game-screen {
             display: none;
             flex-direction: column;
@@ -162,17 +173,22 @@
             100% { background-position: 0% center; text-shadow: 0 0 10px rgba(230, 0, 126, 0.5); }
         }
 
-        /* 3D Карточка Результатов */
+        /* 3D Карточка (По умолчанию НАКЛОНОВ НЕТ) */
         .card-container {
             width: 280px;
             height: 380px;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.08s ease-out;
+            transition: transform 0.06s ease-out; /* Ускоренная реакция для наклона */
             margin: 10px 0;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        /* Состояние РЕЗУЛЬТАТЫ (Активные наклоны) */
+        .card-container.results {
+            will-change: transform;
         }
 
         .card {
@@ -187,7 +203,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            perspective: 500px; /* Для внутреннего параллакса */
+            /* Внутренняя перспектива для параллакса фото */
+            perspective: 600px;
         }
 
         /* Контейнер для параллакса внутри карточки */
@@ -202,15 +219,20 @@
         }
 
         .card img {
-            width: 110%; /* Больше, чтобы скрыть края при параллаксе */
+            width: 110%; /* Больше для параллакса */
             height: 110%;
             object-fit: cover;
             display: none;
             position: absolute;
             top: -5%;
             left: -5%;
-            will-change: transform; /* Оптимизация */
-            transition: transform 0.08s ease-out; /* Плавный параллакс */
+            /* По умолчанию параллакса нет */
+        }
+
+        /* Фото при РЕЗУЛЬТАТАХ (Слабый параллакс) */
+        .card-container.results img {
+            will-change: transform;
+            transition: transform 0.06s ease-out; /* Плавный параллакс */
         }
 
         /* ЗОНА ВЫБОРА ФОТО (Пунктир) */
@@ -247,17 +269,21 @@
             font-weight: 500;
         }
 
-        /* УСИЛЕННЫЙ И ЯРКИЙ БЛИК (Glint) */
+        /* ВОССТАНОВЛЕННЫЙ ЯРКИЙ БЛИК (Glint) */
         .glint {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            /* Яркий глянцевый блик */
-            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0) 65%);
+            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0) 70%);
             pointer-events: none;
             border-radius: 24px;
             z-index: 3;
-            transition: opacity 0.2s, background 0.08s ease-out;
+            transition: opacity 0.2s, background 0.06s ease-out;
             opacity: 0; /* Скрыт, пока фото не загружено */
+        }
+
+        /* Показываем блик в результатах */
+        .card-container.results .glint {
+            opacity: 1;
         }
 
         /* Анимация вылетающих кубиков🎲 */
@@ -291,8 +317,11 @@
         .controls {
             width: 100%;
             max-width: 280px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             z-index: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .btn-spin {
@@ -318,15 +347,32 @@
             cursor: not-allowed;
         }
 
-        input[type="file"] {
-            display: none;
+        /* КНОПКА ЗАНОВО */
+        .btn-reset {
+            display: none; /* Скрыта по умолчанию */
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
         }
 
-        .footer-version {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.3);
-            z-index: 2;
-            margin-top: -10px;
+        .btn-reset:active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .btn-reset.show {
+            display: block;
+        }
+
+        input[type="file"] {
+            display: none;
         }
     </style>
 </head>
@@ -339,12 +385,14 @@
         <div class="welcome-title">ВЫПАДАЙЛО</div>
         <div class="welcome-subtitle">испытай удачу</div>
         <button class="btn-start-main" id="startMainBtn">Начать</button>
+        <!-- Версия ТОЛЬКО здесь -->
+        <div class="version-start">Выпадайло v1.2</div>
     </div>
 
-    <!-- ЭКРАН 2: Игра -->
+    <!-- ЭКРАН 2: Игра / Результаты -->
     <div class="game-screen" id="gameScreen">
         <div class="header-mini">
-            <h1>ЗАГРУЗИ ФОТО</h1>
+            <h1 id="gameHeader">ЗАГРУЗИ ФОТО</h1>
         </div>
 
         <div class="card-container" id="cardContainer">
@@ -353,7 +401,7 @@
                 <div class="photo-inner-wrapper">
                     <img id="userPhoto" alt="Photo">
                 </div>
-                <!-- Фиолетовая зона загрузки -->
+                <!-- Зона загрузки -->
                 <div class="placeholder" id="placeholder">
                     <p><span class="placeholder-icon">📸</span> Выберите фото из галереи</p>
                 </div>
@@ -362,14 +410,14 @@
 
         <div class="controls">
             <button class="btn-spin" id="spinBtn">🎲 Крутить рулетку</button>
+            <!-- Кнопка ЗАНОВО -->
+            <button class="btn-reset" id="resetBtn">Заново</button>
             <input type="file" id="fileInput" accept="image/*">
         </div>
     </div>
 
-    <div class="footer-version">Выпадайло v1.2</div>
-
     <script>
-        // Инициализация Telegram SDK
+        // Инициализация SDK
         const tg = window.Telegram?.WebApp;
         if (tg) {
             tg.ready();
@@ -379,8 +427,10 @@
         const welcomeScreen = document.getElementById('welcomeScreen');
         const gameScreen = document.getElementById('gameScreen');
         const startMainBtn = document.getElementById('startMainBtn');
+        const gameHeader = document.getElementById('gameHeader');
 
         const spinBtn = document.getElementById('spinBtn');
+        const resetBtn = document.getElementById('resetBtn');
         const fileInput = document.getElementById('fileInput');
         const userPhoto = document.getElementById('userPhoto');
         const placeholder = document.getElementById('placeholder');
@@ -389,6 +439,7 @@
         const glint = document.getElementById('glint');
 
         let isPhotoLoaded = false;
+        let isResultsMode = false; // Режим результатов (для гироскопа)
         let audioCtx = null;
 
         const filters = [
@@ -400,21 +451,64 @@
             'filter-gold'
         ];
 
-        // Клик по зоне загрузки открывает выбор файла
+        // Клик по пунктиру открывает выбор файла
         placeholder.addEventListener('click', () => {
             fileInput.click();
         });
 
-        // Переход в игровой интерфейс
+        // ВОССТАНОВЛЕННЫЙ ЗВУК ПРИ СТАРТЕ
+        function playStartSound() {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            // Победный аккорд
+            osc.frequency.setValueAtTime(440, now); // A4
+            osc.frequency.setValueAtTime(554.37, now + 0.1); // C#5
+            osc.frequency.setValueAtTime(659.25, now + 0.2); // E5
+            osc.frequency.setValueAtTime(880, now + 0.3); // A5
+            
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(now + 0.5);
+        }
+
+        // Кнопка НАЧАТЬ
         startMainBtn.addEventListener('click', () => {
             initAudio();
+            playStartSound(); // Играем звук при нажатии «Начать»
             welcomeScreen.classList.add('hidden');
             setTimeout(() => {
                 gameScreen.classList.add('active');
             }, 200);
         });
 
-        // Инициализация звука
+        // Кнопка ЗАНОВО
+        resetBtn.addEventListener('click', () => {
+            // Сброс всего состояния
+            gameScreen.classList.remove('active');
+            welcomeScreen.classList.remove('hidden');
+            gameHeader.innerText = 'ЗАГРУЗИ ФОТО';
+            isPhotoLoaded = false;
+            isResultsMode = false;
+            cardContainer.classList.remove('results');
+            userPhoto.src = '';
+            userPhoto.style.display = 'none';
+            userPhoto.style.transform = 'translate3d(0, 0, 0)'; // Сброс параллакса
+            placeholder.style.display = 'flex';
+            card.className = 'card';
+            spinBtn.innerText = '🎲 Крутить рулетку';
+            spinBtn.disabled = false;
+            resetBtn.classList.remove('show');
+            fileInput.value = ''; // Сброс выбора файла
+            cardContainer.style.transform = 'rotateY(0deg) rotateX(0deg)'; // Сброс 3D наклона
+        });
+
+        // Инициализация аудио
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -457,7 +551,7 @@
             }, 600);
         }
 
-        // Главная кнопка рулетки
+        // Главная кнопка
         spinBtn.addEventListener('click', () => {
             initAudio();
             if (!isPhotoLoaded) {
@@ -476,7 +570,6 @@
                     userPhoto.src = event.target.result;
                     userPhoto.style.display = 'block';
                     placeholder.style.display = 'none';
-                    glint.style.opacity = '1'; // Показываем блик
                     isPhotoLoaded = true;
                     startRoulette();
                 };
@@ -487,12 +580,18 @@
         // Рулетка
         function startRoulette() {
             spinBtn.disabled = true;
+            resetBtn.classList.remove('show'); // Скрываем "Заново" при крутке
+            isResultsMode = false;
+            cardContainer.classList.remove('results');
+            gameHeader.innerText = 'ВЫПАДАЙЛО';
+
             let speed = 40;
             let ticks = 0;
             const maxTicks = 22 + Math.floor(Math.random() * 8);
 
             function roll() {
                 const randomFilter = filters[Math.floor(Math.random() * filters.length)];
+                // Оптимизация: меняем только класс фильтра
                 card.className = 'card ' + randomFilter;
                 
                 playTickSound();
@@ -514,6 +613,11 @@
         function finishRoulette() {
             spinBtn.disabled = false;
             spinBtn.innerText = '🎲 Прокрутить ещё раз';
+            resetBtn.classList.add('show'); // Показываем кнопку ЗАНОВО
+            
+            // АКТИВИРУЕМ РЕЖИМ РЕЗУЛЬТАТОВ (Наклоны и Блик)
+            isResultsMode = true;
+            cardContainer.classList.add('results');
 
             if (typeof confetti === 'function') {
                 confetti({
@@ -524,26 +628,29 @@
             }
         }
 
-        // ГИРОСКОП: 3D Наклон Карточки, ПАРАЛЛАКС ФОТО и БЛИК
+        // ГИРОСКОП: Усиленный 3D Наклон Карточки, Ослабленный ПАРАЛЛАКС ФОТО и БЛИК
+        // Работает ТОЛЬКО в режиме результатов!
         window.addEventListener('deviceorientation', (e) => {
-            if (!e.gamma || !e.beta) return;
+            if (!isResultsMode || !e.gamma || !e.beta) {
+                // Если не результаты, карточка стоит прямо
+                cardContainer.style.transform = 'rotateY(0deg) rotateX(0deg)';
+                return;
+            }
             
             // Расчет наклонов
-            const tiltX = Math.max(-12, Math.min(12, e.gamma / 2.2));
-            const tiltY = Math.max(-12, Math.min(12, (e.beta - 40) / 2.2));
+            const tiltX = Math.max(-15, Math.min(15, e.gamma / 2.0)); // Усиленная реакция по X
+            const tiltY = Math.max(-15, Math.min(15, (e.beta - 40) / 2.0)); // Усиленная реакция по Y
             
-            // 1. Наклон самой карточки (3D)
+            // 1. УСИЛЕННЫЙ Наклон самой карточки (3D)
+            // Прямо "играет" в руках
             cardContainer.style.transform = `rotateY(${tiltX}deg) rotateX(${-tiltY}deg)`;
             
-            // 2. ВНУТРЕННИЙ ПАРАЛЛАКС: Фото внутри смещается в противоположную сторону
-            if (isPhotoLoaded) {
-                userPhoto.style.transform = `translate3d(${-tiltX * 1.5}px, ${-tiltY * 1.5}px, 0)`;
-            }
+            // 2. ОСЛАБЛЕННЫЙ ВНУТРЕННИЙ ПАРАЛЛАКС
+            // Фото смещается совсем чуть-чуть
+            userPhoto.style.transform = `translate3d(${-tiltX * 0.6}px, ${-tiltY * 0.6}px, 0)`;
 
             // 3. БЛИК (Glint) Реагирует на наклон
-            const glintX = 50 + tiltX * 4;
-            const glintY = 50 + tiltY * 4;
-            glint.style.background = `linear-gradient(${135 + tiltX}deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0) 65%)`;
+            glint.style.background = `linear-gradient(${135 + tiltX}deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0) 70%)`;
         });
     </script>
 </body>
