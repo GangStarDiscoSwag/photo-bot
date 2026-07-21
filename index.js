@@ -2,7 +2,7 @@ const { Telegraf } = require('telegraf');
 const express = require('express');
 
 // Вставь сюда свой токен от @BotFather и ссылку на Render
-const BOT_TOKEN = process.env.BOT_TOKEN || 'ТВОЙ_ТОКЕН_ОТ_BOTFATHER';
+const BOT_TOKEN = process.env.BOT_TOKEN || '8230583476:AAFPHlyxmMxDac3hg80hyHpEBwWV8BKHZns';
 const WEBAPP_URL = process.env.WEBAPP_URL || 'https://photo-bot-xxxx.onrender.com';
 
 const bot = new Telegraf(BOT_TOKEN);
