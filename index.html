@@ -48,22 +48,22 @@
         /* Яркий фон без темноты с четким размытием */
         .bg-glow-main {
             position: fixed;
-            width: 140vw;
-            height: 140vh;
+            width: 200vw;
+            height: 200vh;
             top: -20vh;
             left: -20vw;
             background: conic-gradient(from 0deg, #a824e8, #ff007f, #00ffff, #a824e8);
             z-index: 0;
             pointer-events: none;
-            filter: blur(18px);
+            filter: blur(13px);
             opacity: 0.55;
             animation: rotateBg 10s linear infinite;
         }
 
         @keyframes rotateBg {
-            0% { transform: rotate(0deg) scale(0.95); }
-            50% { transform: rotate(180deg) scale(1.05); }
-            100% { transform: rotate(360deg) scale(0.95); }
+            0% { transform: rotate(0deg) }
+            50% { transform: rotate(180deg) }
+            100% { transform: rotate(360deg }
         }
 
         /* --- БЛОК 2: ЭКРАН 1 (ПРИВЕТСТВИЕ) --- */
