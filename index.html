@@ -68,63 +68,27 @@
         }
 
         /* [BLOCK_3: WELCOME SCREEN] */
-        .welcome-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex: 1;
-            width: 100%;
-            z-index: 2;
-            text-align: center;
-            transition: opacity 0.3s ease;
-        }
-
-        .welcome-screen.hidden { display: none !important; }
-
         .welcome-title {
             font-size: 38px;
             font-weight: 900;
-            background: linear-gradient(45deg, var(--pink-accent), var(--accent-glow));
+            background: linear-gradient(90deg, #ff007f 0%, #00ffff 50%, #ff007f 100%);
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 35px rgba(0, 255, 255, 0.6), 0 0 50px rgba(255, 0, 127, 0.5);
             letter-spacing: 2px;
             margin-bottom: 6px;
+            animation: textGlowFlow 3s linear infinite;
+            /* Мягкая темная подложка + неоновый окантовочный свет для идеального контраста */
+            filter: drop-shadow(0 0 12px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 20px rgba(0, 255, 255, 0.6));
         }
 
         .welcome-subtitle {
             font-size: 14px;
             letter-spacing: 4px;
-            color: rgba(255, 255, 255, 0.6);
+            color: #ffffff;
             text-transform: uppercase;
             margin-bottom: 45px;
-        }
-
-        .btn-start-main {
-            width: 85%;
-            max-width: 280px;
-            padding: 18px;
-            border: none;
-            border-radius: 30px;
-            background: linear-gradient(90deg, #e6007e, #a824e8);
-            color: #fff;
-            font-size: 18px;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 10px 30px rgba(230, 0, 126, 0.5), 0 0 20px rgba(168, 36, 232, 0.4);
-            transition: transform 0.15s;
-        }
-
-        .btn-start-main:active { transform: scale(0.95); }
-
-        .version-start {
-            position: absolute;
-            bottom: 15px;
-            left: 15px;
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.3);
-            z-index: 10;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 0 10px rgba(168, 36, 232, 0.5);
         }
 
         /* [BLOCK_4: GAME SCREEN & UPLOAD] */
