@@ -1,23 +1,25 @@
 const { Telegraf } = require('telegraf');
 const express = require('express');
+const path = require('path');
 
-// Вставь сюда свой токен от @BotFather и ссылку на Render
+// Укажи здесь твой токен от @BotFather и URL от Render
 const BOT_TOKEN = process.env.BOT_TOKEN || '8230583476:AAFPHlyxmMxDac3hg80hyHpEBwWV8BKHZns';
-const WEBAPP_URL = process.env.WEBAPP_URL || 'https://photo-bot-xxxx.onrender.com';
+const WEBAPP_URL = process.env.WEBAPP_URL || 'https://photo-bot-xxxx.onrender.com'; 
 
 const bot = new Telegraf(BOT_TOKEN);
 const app = express();
 
-// Отдаем файлы WebApp (index.html, стили, скрипты)
+// Отдаем текущую папку со всеми файлами (включая index.html)
 app.use(express.static(__dirname));
 
+// При обращении к корню отдаем напрямую файл index.html
 app.get('/', (req, res) => {
-    res.send('Выпадайло Bot & WebApp запущены и работают!');
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Обработка команды /start
+// Кнопка запуска в Telegram
 bot.start((ctx) => {
-    ctx.reply('🎰 Привет! Это «Выпадайло» — первая рулетка эффектов для твоих фото. Загрузи снимок, закрути барабан и забери свой уникальный стиль!', {
+    ctx.reply('🎰 Привет! Это «Выпадайло» — рулетка эффектов для твоих фото. Загрузи снимок, закрути барабан и забери свой уникальный стиль!', {
         reply_markup: {
             inline_keyboard: [
                 [{ text: "📸 Открыть Выпадайло", web_app: { url: WEBAPP_URL } }]
@@ -26,15 +28,14 @@ bot.start((ctx) => {
     });
 });
 
-// Запуск веб-сервера для Render
+// Сервер Render
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });
 
-// Запуск бота
 bot.launch().then(() => {
-    console.log('🤖 Бот успешно подключен к Telegram!');
+    console.log('🤖 Бот успешно подключен!');
 }).catch((err) => {
     console.error('Ошибка запуска бота:', err);
 });
