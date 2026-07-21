@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
-        /* --- БЛОК 1: СТИЛИ И ФОН --- */
+        /* [BLOCK_1: ROOT & BODY] */
         :root {
             --bg-color: #0d0614;
             --card-bg: #160d26;
@@ -30,7 +30,7 @@
         }
 
         body {
-            background: #0d0317;
+            background: #120524;
             color: var(--text-color);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             min-height: 100vh;
@@ -45,28 +45,29 @@
             position: relative;
         }
 
-        /* Яркий фон без темноты с четким размытием */
+        /* [BLOCK_2: BG GLOW] Огромный квадрат с запасом, никакой темноты по краям */
         .bg-glow-main {
             position: fixed;
-            width: 200vw;
-            height: 200vh;
-            top: -20vh;
-            left: -20vw;
-            background: conic-gradient(from 0deg, #a824e8, #ff007f, #00ffff, #a824e8);
+            width: 300vw;
+            height: 300vw;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(168, 36, 232, 0.6) 0%, rgba(255, 0, 127, 0.4) 40%, #120524 75%),
+                        conic-gradient(from 0deg, #a824e8, #ff007f, #00ffff, #a824e8);
             z-index: 0;
             pointer-events: none;
-            filter: blur(13px);
-            opacity: 0.55;
-            animation: rotateBg 10s linear infinite;
+            filter: blur(25px);
+            opacity: 0.85;
+            animation: rotateBg 15s linear infinite;
         }
 
         @keyframes rotateBg {
-            0% { transform: rotate(0deg) }
-            50% { transform: rotate(180deg) }
-            100% { transform: rotate(360deg }
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
-        /* --- БЛОК 2: ЭКРАН 1 (ПРИВЕТСТВИЕ) --- */
+        /* [BLOCK_3: WELCOME SCREEN] */
         .welcome-screen {
             display: flex;
             flex-direction: column;
@@ -126,7 +127,7 @@
             z-index: 10;
         }
 
-        /* --- БЛОК 3: ЭКРАН 2 (ИГРА И ЗАГРУЗКА) --- */
+        /* [BLOCK_4: GAME SCREEN & UPLOAD] */
         .game-screen {
             display: none;
             flex-direction: column;
@@ -188,7 +189,7 @@
             gap: 8px;
         }
 
-        /* --- БЛОК 4: КАРТОЧКА И ФИЛЬТРЫ --- */
+        /* [BLOCK_5: CARD & FILTERS] */
         .card-container {
             width: 270px;
             height: 350px;
@@ -248,7 +249,7 @@
         .filter-noir { filter: grayscale(1) contrast(1.9) brightness(0.75); }
         .filter-gold { filter: sepia(0.85) saturate(2.8) contrast(1.25) brightness(1.15); }
 
-        /* --- БЛОК 5: КНОПКИ УПРАВЛЕНИЯ --- */
+        /* [BLOCK_6: CONTROLS] */
         .controls {
             width: 100%;
             max-width: 280px;
@@ -297,7 +298,7 @@
 
     <div class="bg-glow-main"></div>
 
-    <!-- --- БЛОК 6: РАЗМЕТКА (ЭКРАНЫ) --- -->
+    <!-- [BLOCK_7: MARKUP HTML] -->
     <div class="welcome-screen" id="welcomeScreen">
         <div class="welcome-title">ВЫПАДАЙЛО</div>
         <div class="welcome-subtitle">испытай удачу</div>
@@ -327,13 +328,12 @@
         <input type="file" id="fileInput" accept="image/*">
     </div>
 
-    <!-- --- БЛОК 7: СКРИПТЫ И ЛОГИКА --- -->
+    <!-- [BLOCK_8: JS LOGIC] -->
     <script>
         const tg = window.Telegram?.WebApp;
         if (tg) { 
             tg.ready(); 
             tg.expand();
-            // Запрет горизонтального поворота
             if (tg.lockOrientation) { tg.lockOrientation(); }
         }
 
