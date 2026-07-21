@@ -10,10 +10,11 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
-            --bg-color: #0b0b10;
-            --card-bg: #14141c;
-            --accent-color: #8a2be2;
+            --bg-color: #0d0614;
+            --card-bg: #160d26;
             --accent-glow: #00ffff;
+            --pink-accent: #ff007f;
+            --purple-accent: #a824e8;
             --text-color: #ffffff;
         }
 
@@ -26,7 +27,7 @@
         }
 
         body {
-            background-color: var(--bg-color);
+            background: linear-gradient(135deg, #090310 0%, #1a082b 50%, #0d0317 100%);
             color: var(--text-color);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             min-height: 100vh;
@@ -40,52 +41,119 @@
             position: relative;
         }
 
-        /* Динамический задний фон с неоновыми переливами */
-        .bg-glow {
+        /* Сильное размытое неоновое свечение на заднем фоне */
+        .bg-glow-main {
             position: absolute;
-            width: 350px;
-            height: 350px;
-            background: radial-gradient(circle, rgba(138, 43, 226, 0.25) 0%, rgba(0, 255, 255, 0.1) 50%, transparent 80%);
-            top: 50%;
+            width: 380px;
+            height: 380px;
+            background: radial-gradient(circle, rgba(168, 36, 232, 0.35) 0%, rgba(255, 0, 127, 0.2) 45%, transparent 75%);
+            top: 45%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: -2;
+            z-index: 0;
             pointer-events: none;
-            filter: blur(40px); /* Усиленное размытие свечения */
-            animation: pulseGlow 6s ease-in-out infinite alternate;
+            filter: blur(50px);
+            animation: pulseGlow 5s ease-in-out infinite alternate;
         }
 
         @keyframes pulseGlow {
-            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.7; }
-            100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            0% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.7; }
+            100% { transform: translate(-50%, -50%) scale(1.25); opacity: 1; }
         }
 
-        .header {
-            text-align: center;
-            margin-top: 10px;
+        /* --- ЭКРАН 1: ВСТУПИТЕЛЬНЫЙ --- */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            width: 100%;
             z-index: 2;
+            text-align: center;
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
 
-        .header h1 {
-            font-size: 30px;
+        .welcome-screen.hidden {
+            opacity: 0;
+            transform: scale(0.9);
+            pointer-events: none;
+            display: none;
+        }
+
+        .welcome-title {
+            font-size: 38px;
             font-weight: 900;
-            background: linear-gradient(45deg, #ff007f, var(--accent-glow));
+            background: linear-gradient(45deg, var(--pink-accent), var(--accent-glow));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            /* Усиленное размытие свечения за текстом */
-            text-shadow: 0 0 25px rgba(0, 255, 255, 0.6), 0 0 45px rgba(255, 0, 127, 0.4);
-            letter-spacing: 1px;
+            text-shadow: 0 0 35px rgba(0, 255, 255, 0.6), 0 0 50px rgba(255, 0, 127, 0.5);
+            letter-spacing: 2px;
+            margin-bottom: 6px;
         }
 
-        /* 3D-Карточка с гироскопом */
+        .welcome-subtitle {
+            font-size: 14px;
+            letter-spacing: 4px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            margin-bottom: 45px;
+        }
+
+        .btn-start-main {
+            width: 85%;
+            max-width: 280px;
+            padding: 18px;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(90deg, #e6007e, #a824e8);
+            color: #fff;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(230, 0, 126, 0.5), 0 0 20px rgba(168, 36, 232, 0.4);
+            transition: transform 0.15s, box-shadow 0.2s;
+        }
+
+        .btn-start-main:active {
+            transform: scale(0.95);
+        }
+
+        /* --- ЭКРАН 2: ИГРОВОЙ ИНТЕРФЕЙС --- */
+        .game-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            flex: 1;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .game-screen.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .header-mini h1 {
+            font-size: 26px;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--pink-accent), var(--accent-glow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
+        }
+
+        /* 3D Карточка */
         .card-container {
             width: 280px;
             height: 380px;
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.08s ease-out;
-            margin: 15px 0;
-            z-index: 2;
+            margin: 10px 0;
         }
 
         .card {
@@ -94,13 +162,12 @@
             background: var(--card-bg);
             border-radius: 24px;
             border: 2px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 25px rgba(138, 43, 226, 0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 25px rgba(168, 36, 232, 0.3);
             overflow: hidden;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: border-color 0.3s;
         }
 
         .card img {
@@ -120,43 +187,36 @@
             font-size: 52px;
             margin-bottom: 12px;
             display: block;
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
         }
 
-        /* Блик от света (Glint) поверх фото */
+        /* Сочный блик света (Glint) */
         .glint {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0) 70%);
             pointer-events: none;
             border-radius: 24px;
             z-index: 3;
         }
 
-        /* Падающие квадратные фигурки / элементы рулетки (как в оригинале) */
-        .roulette-overlay {
+        /* Анимация летающих кубиков (🎲) во время прокрутки */
+        .dice-particle {
             position: absolute;
-            inset: 0;
-            border-radius: 24px;
-            border: 3px dashed rgba(0, 255, 255, 0.4);
-            opacity: 0;
+            font-size: 28px;
             pointer-events: none;
-            transition: opacity 0.2s;
-            z-index: 4;
-        }
-        
-        .card.spinning .roulette-overlay {
-            opacity: 1;
-            animation: borderSpin 0.5s linear infinite;
+            z-index: 10;
+            animation: flyDice 0.6s ease-out forwards;
         }
 
-        @keyframes borderSpin {
-            0% { border-color: rgba(0, 255, 255, 0.6); box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.3); }
-            50% { border-color: rgba(255, 0, 127, 0.6); box-shadow: inset 0 0 15px rgba(255, 0, 127, 0.3); }
-            100% { border-color: rgba(0, 255, 255, 0.6); box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.3); }
+        @keyframes flyDice {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) rotate(0deg) scale(0.5);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--dx), var(--dy)) rotate(360deg) scale(1.4);
+            }
         }
 
         /* Фильтры стилей */
@@ -167,12 +227,10 @@
         .filter-noir { filter: grayscale(1) contrast(1.9) brightness(0.75); }
         .filter-gold { filter: sepia(0.85) saturate(2.8) contrast(1.25) brightness(1.15); }
 
-        /* Элементы управления */
         .controls {
             width: 100%;
             max-width: 280px;
-            margin-bottom: 15px;
-            z-index: 2;
+            margin-bottom: 10px;
         }
 
         .btn-spin {
@@ -180,13 +238,13 @@
             padding: 16px;
             border: none;
             border-radius: 16px;
-            background: linear-gradient(45deg, #8a2be2, #ff007f);
+            background: linear-gradient(45deg, var(--purple-accent), var(--pink-accent));
             color: #fff;
             font-size: 18px;
             font-weight: 800;
             cursor: pointer;
             box-shadow: 0 8px 25px rgba(255, 0, 127, 0.45);
-            transition: transform 0.1s, box-shadow 0.2s;
+            transition: transform 0.1s;
         }
 
         .btn-spin:active {
@@ -204,47 +262,58 @@
 
         .footer-version {
             font-size: 11px;
-            color: #555;
-            align-self: center;
-            margin-bottom: 5px;
+            color: rgba(255, 255, 255, 0.3);
             z-index: 2;
         }
     </style>
 </head>
 <body>
 
-    <div class="bg-glow"></div>
+    <div class="bg-glow-main"></div>
 
-    <div class="header">
-        <h1>ВЫПАДАЙЛО</h1>
+    <!-- ЭКРАН 1: Приветствие -->
+    <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-title">ВЫПАДАЙЛО</div>
+        <div class="welcome-subtitle">испытай удачу</div>
+        <button class="btn-start-main" id="startMainBtn">Начать</button>
     </div>
 
-    <div class="card-container" id="cardContainer">
-        <div class="card" id="card">
-            <div class="roulette-overlay"></div>
-            <div class="glint"></div>
-            <div class="placeholder" id="placeholder">
-                <span class="placeholder-icon">🎰</span>
-                <p>Нажми кнопку ниже,<br>чтобы загрузить фото</p>
-            </div>
-            <img id="userPhoto" alt="Photo">
+    <!-- ЭКРАН 2: Игра -->
+    <div class="game-screen" id="gameScreen">
+        <div class="header-mini">
+            <h1>ВЫПАДАЙЛО</h1>
         </div>
-    </div>
 
-    <div class="controls">
-        <button class="btn-spin" id="spinBtn">🎲 Крутить рулетку</button>
-        <input type="file" id="fileInput" accept="image/*">
+        <div class="card-container" id="cardContainer">
+            <div class="card" id="card">
+                <div class="glint"></div>
+                <div class="placeholder" id="placeholder">
+                    <span class="placeholder-icon">🎰</span>
+                    <p>Нажми кнопку ниже,<br>чтобы загрузить фото</p>
+                </div>
+                <img id="userPhoto" alt="Photo">
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-spin" id="spinBtn">🎲 Крутить рулетку</button>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
     </div>
 
     <div class="footer-version">Выпадайло v1.2</div>
 
     <script>
-        // Инициализация Telegram WebApp сразу без задержек (исправление таймаута)
+        // Инициализация Telegram WebApp сразу без задержек (убираем таймаут)
         const tg = window.Telegram?.WebApp;
         if (tg) {
             tg.ready();
             tg.expand();
         }
+
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const startMainBtn = document.getElementById('startMainBtn');
 
         const spinBtn = document.getElementById('spinBtn');
         const fileInput = document.getElementById('fileInput');
@@ -265,29 +334,60 @@
             'filter-gold'
         ];
 
-        // Инициализация звукового контекста при первом клике
+        // Переход с экрана приветствия в игру
+        startMainBtn.addEventListener('click', () => {
+            initAudio();
+            welcomeScreen.classList.add('hidden');
+            setTimeout(() => {
+                gameScreen.classList.add('active');
+            }, 200);
+        });
+
+        // Инициализация звука
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
         }
 
-        // Звук щелчка рулетки
+        // Щелчки рулетки
         function playTickSound() {
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(1400, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(1300, audioCtx.currentTime);
             gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.025);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.025);
+            osc.stop(audioCtx.currentTime + 0.03);
         }
 
-        // Главная кнопка
+        // Создание вылетающих кубиков 🎲 при рулетке
+        function spawnDice() {
+            const dice = document.createElement('div');
+            dice.className = 'dice-particle';
+            dice.innerText = '🎲';
+            
+            // Случайное направление вылета кубика из центра
+            const dx = (Math.random() - 0.5) * 220 + 'px';
+            const dy = (Math.random() - 0.5) * 220 + 'px';
+            dice.style.setProperty('--dx', dx);
+            dice.style.setProperty('--dy', dy);
+            
+            dice.style.left = '50%';
+            dice.style.top = '50%';
+
+            cardContainer.appendChild(dice);
+
+            setTimeout(() => {
+                dice.remove();
+            }, 600);
+        }
+
+        // Главная кнопка рулетки
         spinBtn.addEventListener('click', () => {
             initAudio();
             if (!isPhotoLoaded) {
@@ -297,7 +397,7 @@
             }
         });
 
-        // Загрузка фото
+        // Загрузка файла
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
@@ -316,20 +416,20 @@
         // Вращение рулетки
         function startRoulette() {
             spinBtn.disabled = true;
-            card.classList.add('spinning');
             let speed = 40;
             let ticks = 0;
             const maxTicks = 22 + Math.floor(Math.random() * 8);
 
             function roll() {
                 const randomFilter = filters[Math.floor(Math.random() * filters.length)];
-                // Оставляем только класс фильтра и класс вращения
-                card.className = 'card spinning ' + randomFilter;
+                card.className = 'card ' + randomFilter;
+                
                 playTickSound();
+                spawnDice(); // Вылетает кубик при каждом переключении!
 
                 ticks++;
                 if (ticks < maxTicks) {
-                    speed += 14; // Плавное замедление
+                    speed += 14;
                     setTimeout(roll, speed);
                 } else {
                     finishRoulette();
@@ -339,13 +439,11 @@
             roll();
         }
 
-        // Завершение рулетки и салют
+        // Завершение
         function finishRoulette() {
-            card.classList.remove('spinning');
             spinBtn.disabled = false;
             spinBtn.innerText = '🎲 Прокрутить ещё раз';
 
-            // Конфетти
             if (typeof confetti === 'function') {
                 confetti({
                     particleCount: 80,
@@ -355,7 +453,7 @@
             }
         }
 
-        // Плавный гироскоп (Tilt эффект)
+        // Наклон карты гироскопом
         window.addEventListener('deviceorientation', (e) => {
             if (!e.gamma || !e.beta) return;
             const tiltX = Math.max(-12, Math.min(12, e.gamma / 2.2));
