@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Выпадайло v1.2.4</title>
+    <title>Выпадайло v1.2.5</title>
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -201,6 +201,7 @@
             transform-style: preserve-3d;
             display: none;
             margin-bottom: 5px;
+            will-change: transform;
         }
 
         .card-neon-glow {
@@ -237,6 +238,20 @@
             will-change: transform;
         }
 
+        /* Глитч-анимация при объявлении результатов */
+        .card.glitch-active img {
+            animation: glitchFx 0.35s ease-in-out;
+        }
+
+        @keyframes glitchFx {
+            0% { transform: translate3d(0, 0, 0) scale(1); filter: brightness(1.8) contrast(1.5); }
+            20% { transform: translate3d(-6px, 4px, 0) scale(1.03); filter: hue-rotate(90deg) brightness(2); }
+            40% { transform: translate3d(6px, -4px, 0) scale(0.98); filter: invert(0.2) contrast(2); }
+            60% { transform: translate3d(-4px, -2px, 0) scale(1.02); }
+            80% { transform: translate3d(3px, 2px, 0) scale(1.01); }
+            100% { transform: translate3d(0, 0, 0) scale(1); }
+        }
+
         .glint {
             position: absolute;
             inset: 0;
@@ -266,8 +281,6 @@
         .filter-neon { filter: invert(0.12) hue-rotate(180deg) saturate(2.2); }
         .filter-noir { filter: grayscale(1) contrast(1.9) brightness(0.75); }
         .filter-gold { filter: sepia(0.85) saturate(2.8) contrast(1.25) brightness(1.15); }
-        
-        /* Новые стили */
         .filter-red-noir { filter: grayscale(1) contrast(2.2) brightness(0.85) drop-shadow(0 0 1px #ff0033) hue-rotate(-50deg); }
         .filter-cyber-purple { filter: contrast(1.4) saturate(2.5) hue-rotate(90deg) brightness(0.9); }
         .filter-amber { filter: sepia(0.9) saturate(3.2) hue-rotate(-30deg) contrast(1.3); }
@@ -326,7 +339,7 @@
         <div class="welcome-title">ВЫПАДАЙЛО</div>
         <div class="welcome-subtitle">испытай удачу</div>
         <button class="btn-start-main" id="startMainBtn">Начать</button>
-        <div class="version-start">Выпадайло v1.2.4</div>
+        <div class="version-start">Выпадайло v1.2.5</div>
     </div>
 
     <div class="game-screen" id="gameScreen">
@@ -382,7 +395,6 @@
         let currentTiltX = 0, currentTiltY = 0;
         let targetTiltX = 0, targetTiltY = 0;
 
-        // Расширенный набор фильтров
         const filters = [
             'filter-cyberpunk', 
             'filter-matrix', 
@@ -397,7 +409,6 @@
 
         let lastFilterIndex = -1;
 
-        // Выбор фильтра с защитой от повтора подряд
         function getNextFilter() {
             let randomIndex;
             do {
@@ -540,6 +551,7 @@
             spinBtn.disabled = true;
             resetBtn.style.display = 'none';
             gameHeader.innerText = 'ВЫПАДАЙЛО';
+            card.classList.remove('glitch-active');
 
             if (typeof confetti === 'function' && confetti.reset) {
                 confetti.reset();
@@ -572,6 +584,10 @@
             spinBtn.innerText = '🎲 Прокрутить ещё раз';
             resetBtn.style.display = 'block';
 
+            // Эффект неонового глитча в момент победы
+            card.classList.add('glitch-active');
+            setTimeout(() => card.classList.remove('glitch-active'), 350);
+
             playWinSound();
 
             if (typeof confetti === 'function') {
@@ -579,10 +595,11 @@
             }
         }
 
+        // Увеличен градус наклона наклона карточки (с 12deg до 24deg)
         window.addEventListener('deviceorientation', (e) => {
             if (!e.gamma || !e.beta) return;
-            targetTiltX = Math.max(-12, Math.min(12, e.gamma / 2.5));
-            targetTiltY = Math.max(-12, Math.min(12, (e.beta - 40) / 2.5));
+            targetTiltX = Math.max(-24, Math.min(24, e.gamma / 1.2));
+            targetTiltY = Math.max(-24, Math.min(24, (e.beta - 40) / 1.2));
         });
 
         function animateTilt() {
