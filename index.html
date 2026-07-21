@@ -2,393 +2,308 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Выпадайло v1.2</title>
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        html, body { width: 100%; height: 100%; overflow: hidden; touch-action: none; background: #050209; perspective: 1200px; }
-        body { color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative; }
-
-        /* Оптимизированный неоновый туман */
-        body::before {
-            content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle at 30% 30%, rgba(127, 0, 255, 0.25) 0%, transparent 50%),
-                        radial-gradient(circle at 70% 70%, rgba(255, 0, 127, 0.25) 0%, transparent 50%);
-            animation: fogMotion 10s linear infinite;
-            z-index: 0; pointer-events: none;
-            will-change: transform;
-        }
-        @keyframes fogMotion { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
+        :root {
+            --bg-color: #0f0f13;
+            --card-bg: #1a1a24;
+            --accent-color: #8a2be2;
+            --accent-glow: #00ffff;
+            --text-color: #ffffff;
         }
 
-        .screen { display: none; text-align: center; width: 100%; max-width: 400px; z-index: 1; }
-        .active { display: block; }
-        
-        /* Заголовок */
-        h1 { font-size: 2.3rem; text-transform: uppercase; margin-bottom: 5px; font-weight: 900; 
-             background: linear-gradient(90deg, #ff007f, #00f0ff, #7f00ff, #ff007f); 
-             background-size: 300% auto;
-             -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-             animation: textFlow 4s linear infinite; }
-        @keyframes textFlow { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
-        
-        .sub-text { font-size: 0.85rem; color: rgba(255, 255, 255, 0.6); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 25px; }
-
-        .btn { background: linear-gradient(90deg, #ff007f, #7f00ff); border: none; color: white; padding: 16px; border-radius: 50px; width: 100%; font-weight: bold; margin-top: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 0, 127, 0.3); font-size: 1rem; }
-        .btn-secondary { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255,255,255,0.2); box-shadow: none; }
-        
-        .upload-zone { display: block; border: 2px dashed #7f00ff; padding: 40px 20px; border-radius: 25px; background: rgba(127, 0, 255, 0.05); cursor: pointer; }
-        .preview-img { width: 100%; max-height: 250px; object-fit: cover; border-radius: 20px; display: none; margin-top: 10px; }
-        
-        /* Рулетка */
-        .roulette-container { 
-            position: relative; width: 100%; height: 130px; 
-            background: rgba(17, 17, 34, 0.9); 
-            border: 2px solid rgba(127, 0, 255, 0.5); 
-            border-radius: 20px; overflow: hidden; margin: 30px 0; 
-        }
-        
-        .roulette-container::before, .roulette-container::after {
-            content: ""; position: absolute; top: 0; width: 50px; height: 100%; z-index: 4; pointer-events: none;
-        }
-        .roulette-container::before { left: 0; background: linear-gradient(to right, rgba(5,2,9,1), transparent); }
-        .roulette-container::after { right: 0; background: linear-gradient(to left, rgba(5,2,9,1), transparent); }
-
-        .pointer { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 4px; height: 100%; background: #00f0ff; z-index: 10; box-shadow: 0 0 10px #00f0ff; }
-        .roulette-strip { display: flex; align-items: center; position: absolute; left: 0; top: 15px; height: 100px; transition: transform 4.2s cubic-bezier(0.1, 0.85, 0.22, 1); }
-        
-        .case-item { 
-            width: 80px; height: 80px; margin: 0 10px; 
-            display: flex; align-items: center; justify-content: center; 
-            flex-shrink: 0; background: #1c1c32; 
-            border: 1px solid rgba(255,255,255,0.15); border-radius: 12px;
-            font-size: 2rem;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        /* 3D Контейнер */
-        .card-perspective { perspective: 1200px; width: 100%; display: flex; justify-content: center; margin-bottom: 15px; }
-
-        /* Оптимизированная карточка */
-        .result-card { 
-            position: relative; width: 100%; max-width: 340px; padding: 20px; border-radius: 24px; 
-            background: linear-gradient(135deg, #15162c 0%, #0d0e1a 100%); 
-            border: 2px solid rgba(255,255,255,0.2);
-            transform-style: preserve-3d;
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
-            will-change: transform;
-            backface-visibility: hidden;
+            perspective: 1000px;
         }
 
-        /* Контейнер маски для Параллакса */
-        .photo-wrapper {
-            width: 100%; max-height: 260px; height: 260px; overflow: hidden; border-radius: 16px; margin-bottom: 15px;
-            position: relative; z-index: 1; transform-style: preserve-3d;
+        .header {
+            text-align: center;
+            margin-top: 10px;
         }
 
-        .result-photo { 
-            width: 110%; height: 110%; object-fit: cover; border-radius: 16px; 
-            position: absolute; top: -5%; left: -5%;
-            transition: filter 0.3s ease; will-change: transform;
+        .header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(45deg, #ff007f, var(--accent-glow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
         }
 
-        /* Анаморфный блик-крест (Lens Flare) */
-        #glint {
-            position: absolute; top: 50%; left: 50%; width: 120px; height: 120px;
-            pointer-events: none; z-index: 5; transform: translate(-50%, -50%);
-            mix-blend-mode: screen; opacity: 0.85; will-change: transform;
-        }
-        #glint::before, #glint::after {
-            content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #00f0ff; box-shadow: 0 0 12px #00f0ff, 0 0 20px #7f00ff;
-        }
-        #glint::before { width: 100%; height: 2px; } /* Горизонтальный луч */
-        #glint::after { width: 2px; height: 100%; }  /* Вертикальный луч */
-        
-        .flare-core {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 30px; height: 30px; background: radial-gradient(circle, #fff 20%, #00f0ff 60%, transparent 100%);
-            border-radius: 50%;
+        /* 3D-Карточка с гироскопом */
+        .card-container {
+            width: 280px;
+            height: 380px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+            margin: 20px 0;
         }
 
-        /* Конфетти холст */
-        #confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        .card {
+            width: 100%;
+            height: 100%;
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 15px rgba(138, 43, 226, 0.2);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-        /* Версионирование */
-        .version-tag { position: absolute; bottom: 12px; left: 15px; font-size: 0.75rem; color: rgba(255, 255, 255, 0.35); font-weight: bold; }
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
 
-        /* Фильтры */
-        .filter-bw { filter: grayscale(100%); }
-        .filter-sepia { filter: sepia(100%); }
-        .filter-invert { filter: invert(100%); }
-        .filter-blur { filter: blur(5px); }
-        .filter-brightness { filter: brightness(150%); }
-        .filter-pixelate { filter: contrast(150%) hue-rotate(90deg); }
+        .placeholder {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+
+        .placeholder-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* Блик от света (Glint) */
+        .glint {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 60%);
+            pointer-events: none;
+            border-radius: 20px;
+        }
+
+        /* Фильтры стилей */
+        .filter-cyberpunk { filter: contrast(1.3) saturate(1.8) hue-rotate(-20deg); }
+        .filter-matrix { filter: sepia(1) hue-rotate(80deg) saturate(3) contrast(1.2); }
+        .filter-retro { filter: sepia(0.4) contrast(1.1) brightness(0.9) saturate(1.3); }
+        .filter-neon { filter: invert(0.1) hue-rotate(180deg) saturate(2); }
+        .filter-noir { filter: grayscale(1) contrast(1.8) brightness(0.8); }
+        .filter-gold { filter: sepia(0.8) saturate(2.5) contrast(1.2) brightness(1.1); }
+
+        /* Кнопка рулетки */
+        .controls {
+            width: 100%;
+            max-width: 280px;
+            margin-bottom: 10px;
+        }
+
+        .btn-spin {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(45deg, #8a2be2, #ff007f);
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(255, 0, 127, 0.4);
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+
+        .btn-spin:active {
+            transform: scale(0.96);
+        }
+
+        .btn-spin:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .footer-version {
+            font-size: 11px;
+            color: #444;
+            align-self: flex-end;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
-    <canvas id="confetti-canvas"></canvas>
 
-    <div id="screen-start" class="screen active">
-        <h1>Выпадайло</h1>
-        <div class="sub-text">испытай удачу</div>
-        <button class="btn" onclick="handleStartButton()">Начать</button>
-        <div class="version-tag">Выпадайло v1.2</div>
+    <div class="header">
+        <h1>ВЫПАДАЙЛО</h1>
     </div>
 
-    <div id="screen-upload" class="screen">
-        <h1>Загрузи фото</h1>
-        <label for="file-input" class="upload-zone">
-            <input type="file" id="file-input" accept="image/*" style="display:none">
-            <span id="upload-text">📸 Выберите фото из галереи</span>
-            <img id="preview" class="preview-img" src="">
-        </label>
-        <button class="btn" id="btn-spin" style="display: none;" onclick="startRoulette()">Крутить рулетку!</button>
-    </div>
-
-    <div id="screen-roulette" class="screen">
-        <h1>Выбираем эффект...</h1>
-        <div class="roulette-container">
-            <div class="pointer"></div>
-            <div class="roulette-strip" id="strip"></div>
-        </div>
-    </div>
-
-    <div id="screen-result" class="screen">
-        <div class="card-perspective">
-            <div id="final-card" class="result-card">
-                <div id="glint"><div class="flare-core"></div></div>
-                <div class="photo-wrapper">
-                    <img id="result-photo" class="result-photo" src="">
-                </div>
-                <div id="rarity-badge" style="padding: 8px 12px; border-radius: 20px; font-weight: bold; margin-bottom: 8px; position: relative; z-index: 1; color: #fff; display: inline-block;">Эффект</div>
-                <p id="desc-text" style="font-size: 1.1rem; font-weight: bold; position: relative; z-index: 1;"></p>
+    <div class="card-container" id="cardContainer">
+        <div class="card" id="card">
+            <div class="glint"></div>
+            <div class="placeholder" id="placeholder">
+                <span class="placeholder-icon">🎰</span>
+                <p>Нажми кнопку ниже,<br>чтобы загрузить фото</p>
             </div>
+            <img id="userPhoto" alt="Photo">
         </div>
-        <button class="btn" onclick="shareResult()">🚀 Поделиться</button>
-        <button class="btn btn-secondary" onclick="savePhoto()">💾 Сохранить фото</button>
-        <button class="btn btn-secondary" onclick="location.reload()">Заново</button>
     </div>
+
+    <div class="controls">
+        <button class="btn-spin" id="spinBtn">🎲 Крутить рулетку</button>
+        <input type="file" id="fileInput" accept="image/*">
+    </div>
+
+    <div class="footer-version">Выпадайло v1.2</div>
 
     <script>
+        // Инициализация Telegram WebApp сразу без задержек
         const tg = window.Telegram?.WebApp;
-        if (tg) { tg.ready(); tg.expand(); }
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
 
+        const spinBtn = document.getElementById('spinBtn');
+        const fileInput = document.getElementById('fileInput');
+        const userPhoto = document.getElementById('userPhoto');
+        const placeholder = document.getElementById('placeholder');
+        const cardContainer = document.getElementById('cardContainer');
+        const card = document.getElementById('card');
+
+        let isPhotoLoaded = false;
         let audioCtx = null;
-        let targetX = 0, targetY = 0, currentX = 0, currentY = 0;
-        let gyroActivated = false;
-        let winningEffect = null;
 
-        const photoEffects = [
-            { id: "bw", title: "⚪ Чёрно-белое", class: "filter-bw", color: "#8e8e93", icon: "⚪" },
-            { id: "sepia", title: "📜 Сепия", class: "filter-sepia", color: "#d1a153", icon: "📜" },
-            { id: "invert", title: "🌀 Инверсия", class: "filter-invert", color: "#00f0ff", icon: "🌀" },
-            { id: "blur", title: "✨ Размытие", class: "filter-blur", color: "#bf5af2", icon: "✨" },
-            { id: "brightness", title: "🎨 Яркость +50%", class: "filter-brightness", color: "#ff9f0a", icon: "🎨" },
-            { id: "pixelate", title: "🎭 Пикселизация", class: "filter-pixelate", color: "#ff375f", icon: "🎭" }
+        const filters = [
+            'filter-cyberpunk',
+            'filter-matrix',
+            'filter-retro',
+            'filter-neon',
+            'filter-noir',
+            'filter-gold'
         ];
 
-        function triggerHaptic(type, subType) {
-            if (!tg?.HapticFeedback) return;
-            if (type === 'impact') tg.HapticFeedback.impactOccurred(subType || 'light');
-            if (type === 'notification') tg.HapticFeedback.notificationOccurred(subType || 'success');
-        }
-
-        function initAudio() { 
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); 
-            if (audioCtx.state === 'suspended') audioCtx.resume(); 
-        }
-        
-        function playStartSound() {
-            if(!audioCtx) return;
-            const now = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-            osc.frequency.setValueAtTime(200, now);
-            osc.frequency.exponentialRampToValueAtTime(400, now + 0.3);
-            gain.gain.setValueAtTime(0.3, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(now + 0.5);
-        }
-
-        function playTickSound(freq) {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-            osc.type = 'sine'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
-            triggerHaptic('impact', 'light');
-        }
-
-        function playWinSound() {
-            if (!audioCtx) return;
-            const now = audioCtx.currentTime;
-            [261.63, 329.63, 392.00, 523.25].forEach((freq, idx) => {
-                const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(freq, now + idx * 0.08);
-                gain.gain.setValueAtTime(0.25, now + idx * 0.08);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.4);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(now + idx * 0.08); osc.stop(now + idx * 0.08 + 0.4);
-            });
-            triggerHaptic('notification', 'success');
-        }
-
-        function changeScreen(id) { 
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); 
-            document.getElementById(id).classList.add('active'); 
-        }
-        
-        function handleStartButton() { 
-            initAudio(); playStartSound();
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission().catch(console.error);
+        // Инициализация звукового контекста при первом клике
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
-            changeScreen('screen-upload'); 
         }
 
-        // Оптимизированный гироскоп с малым шагом lerp (без рывков)
-        window.addEventListener('deviceorientation', (e) => {
-            if (!gyroActivated || e.beta === null) return;
-            let normBeta = e.beta - 50; 
-            targetX = Math.max(Math.min(normBeta / 4, 10), -10);
-            targetY = Math.max(Math.min(e.gamma / 3, 10), -10);
+        // Простой звук щелчка рулетки
+        function playTickSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.03);
+        }
+
+        // Главная кнопка
+        spinBtn.addEventListener('click', () => {
+            initAudio();
+            if (!isPhotoLoaded) {
+                fileInput.click();
+            } else {
+                startRoulette();
+            }
         });
 
-        function updatePhysics() {
-            if (gyroActivated) {
-                const card = document.getElementById('final-card');
-                const photo = document.getElementById('result-photo');
-                const glint = document.getElementById('glint');
-                
-                if (card && card.offsetParent !== null) {
-                    // Сглаживание lerp (0.08 дает плавный 60 FPS отклик)
-                    currentX += (targetX - currentX) * 0.08;
-                    currentY += (targetY - currentY) * 0.08;
+        // Загрузка фото
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    userPhoto.src = event.target.result;
+                    userPhoto.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    isPhotoLoaded = true;
+                    startRoulette();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
-                    // 3D вращение карточки
-                    card.style.transform = `rotateX(${currentX}deg) rotateY(${currentY}deg)`;
-                    
-                    // Параллакс фото внутри карточки (смещение в обратную сторону)
-                    photo.style.transform = `translate3d(${-currentY * 1.5}px, ${-currentX * 1.5}px, 0)`;
+        // Вращение рулетки
+        function startRoulette() {
+            spinBtn.disabled = true;
+            let speed = 50;
+            let ticks = 0;
+            const maxTicks = 20 + Math.floor(Math.random() * 10);
 
-                    // Смещение вспышки (Flare)
-                    let glintX = 50 + (currentY * 4);
-                    let glintY = 50 - (currentX * 4);
-                    glint.style.left = `${glintX}%`;
-                    glint.style.top = `${glintY}%`;
+            function roll() {
+                // Случайный фильтр
+                const randomFilter = filters[Math.floor(Math.random() * filters.length)];
+                card.className = 'card ' + randomFilter;
+                playTickSound();
+
+                ticks++;
+                if (ticks < maxTicks) {
+                    speed += 15; // Замедление
+                    setTimeout(roll, speed);
+                } else {
+                    finishRoulette();
                 }
             }
-            requestAnimationFrame(updatePhysics);
-        }
-        requestAnimationFrame(updatePhysics);
 
-        // Превью
-        document.getElementById('file-input').onchange = function(e) {
-            if (!e.target.files[0]) return;
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                document.getElementById('preview').src = ev.target.result;
-                document.getElementById('preview').style.display = 'block';
-                document.getElementById('upload-text').style.display = 'none';
-                document.getElementById('btn-spin').style.display = 'block';
-            };
-            reader.readAsDataURL(e.target.files[0]);
+            roll();
         }
 
-        function startRoulette() {
-            changeScreen('screen-roulette');
-            const strip = document.getElementById('strip'); 
-            strip.innerHTML = '';
-            strip.style.transition = "none"; 
-            strip.style.transform = "translate3d(0,0,0)";
-            
-            winningEffect = photoEffects[Math.floor(Math.random() * photoEffects.length)];
+        // Завершение рулетки и салют
+        function finishRoulette() {
+            spinBtn.disabled = false;
+            spinBtn.innerText = '🎲 Прокрутить ещё раз';
 
-            for(let i = 0; i < 25; i++) {
-                let effect = photoEffects[Math.floor(Math.random() * photoEffects.length)];
-                if (i === 21) effect = winningEffect;
-
-                const div = document.createElement('div');
-                div.className = 'case-item';
-                div.innerHTML = effect.icon;
-                strip.appendChild(div);
-
-                if(i < 21) setTimeout(() => playTickSound(400 + i * 15), Math.pow(i / 20, 2.5) * 3500);
-            }
-
-            setTimeout(() => {
-                strip.style.transition = "transform 4.2s cubic-bezier(0.1, 0.85, 0.22, 1)";
-                strip.style.transform = `translate3d(-2100px, 0, 0)`;
-            }, 50);
-
-            setTimeout(() => {
-                changeScreen('screen-result');
-                gyroActivated = true;
-                playWinSound();
-                launchConfetti();
-                
-                const resultPhoto = document.getElementById('result-photo');
-                resultPhoto.src = document.getElementById('preview').src;
-                resultPhoto.className = 'result-photo ' + winningEffect.class;
-
-                const badge = document.getElementById('rarity-badge');
-                badge.innerText = winningEffect.icon + " " + winningEffect.title;
-                badge.style.backgroundColor = winningEffect.color;
-
-                document.getElementById('desc-text').innerText = "Твоё фото в новом стиле!";
-            }, 4300);
-        }
-
-        // Конфетти
-        function launchConfetti() {
-            const canvas = document.getElementById('confetti-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            
-            let particles = Array.from({length: 40}, () => ({
-                x: canvas.width / 2, y: canvas.height / 2,
-                vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.7) * 14,
-                color: ['#ff007f', '#00f0ff', '#7f00ff', '#ffcc00'][Math.floor(Math.random()*4)],
-                size: Math.random() * 6 + 4, opacity: 1
-            }));
-
-            function render() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach((p, i) => {
-                    p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.opacity -= 0.015;
-                    ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(p.opacity, 0);
-                    ctx.fillRect(p.x, p.y, p.size, p.size);
+            // Конфетти
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 70,
+                    spread: 60,
+                    origin: { y: 0.7 }
                 });
-                particles = particles.filter(p => p.opacity > 0);
-                if (particles.length > 0) requestAnimationFrame(render);
-            }
-            render();
-        }
-
-        // Сохранить фото
-        function savePhoto() {
-            const link = document.createElement('a');
-            link.download = 'vybadailo-photo.png';
-            link.href = document.getElementById('preview').src;
-            link.click();
-        }
-
-        // Поделиться в Telegram
-        function shareResult() {
-            if (tg && tg.openTelegramLink) {
-                const text = encodeURIComponent(`Смотри, какой эффект мне выпал в Выпадайло: ${winningEffect ? winningEffect.title : ''}! 🚀`);
-                tg.openTelegramLink(`https://t.me/share/url?url=&text=${text}`);
-            } else {
-                alert("Скопируйте ссылку и отправьте друзьям!");
             }
         }
+
+        // Плавный гироскоп (Tilt эффект)
+        window.addEventListener('deviceorientation', (e) => {
+            if (!e.gamma || !e.beta) return;
+            const tiltX = Math.max(-15, Math.min(15, e.gamma / 2));
+            const tiltY = Math.max(-15, Math.min(15, (e.beta - 40) / 2));
+            cardContainer.style.transform = `rotateY(${tiltX}deg) rotateX(${-tiltY}deg)`;
+        });
     </script>
 </body>
 </html>
