@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Выпадайло v1.2.3</title>
+    <title>Выпадайло v1.2.4</title>
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -259,12 +259,18 @@
             100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(360deg) scale(1.6); }
         }
 
+        /* --- Фильтры --- */
         .filter-cyberpunk { filter: contrast(1.35) saturate(1.9) hue-rotate(-20deg); }
         .filter-matrix { filter: sepia(1) hue-rotate(80deg) saturate(3.5) contrast(1.25); }
         .filter-retro { filter: sepia(0.45) contrast(1.15) brightness(0.9) saturate(1.4); }
         .filter-neon { filter: invert(0.12) hue-rotate(180deg) saturate(2.2); }
         .filter-noir { filter: grayscale(1) contrast(1.9) brightness(0.75); }
         .filter-gold { filter: sepia(0.85) saturate(2.8) contrast(1.25) brightness(1.15); }
+        
+        /* Новые стили */
+        .filter-red-noir { filter: grayscale(1) contrast(2.2) brightness(0.85) drop-shadow(0 0 1px #ff0033) hue-rotate(-50deg); }
+        .filter-cyber-purple { filter: contrast(1.4) saturate(2.5) hue-rotate(90deg) brightness(0.9); }
+        .filter-amber { filter: sepia(0.9) saturate(3.2) hue-rotate(-30deg) contrast(1.3); }
 
         /* [BLOCK_6: CONTROLS] */
         .controls {
@@ -320,7 +326,7 @@
         <div class="welcome-title">ВЫПАДАЙЛО</div>
         <div class="welcome-subtitle">испытай удачу</div>
         <button class="btn-start-main" id="startMainBtn">Начать</button>
-        <div class="version-start">Выпадайло v1.2.3</div>
+        <div class="version-start">Выпадайло v1.2.4</div>
     </div>
 
     <div class="game-screen" id="gameScreen">
@@ -376,7 +382,31 @@
         let currentTiltX = 0, currentTiltY = 0;
         let targetTiltX = 0, targetTiltY = 0;
 
-        const filters = ['filter-cyberpunk', 'filter-matrix', 'filter-retro', 'filter-neon', 'filter-noir', 'filter-gold'];
+        // Расширенный набор фильтров
+        const filters = [
+            'filter-cyberpunk', 
+            'filter-matrix', 
+            'filter-retro', 
+            'filter-neon', 
+            'filter-noir', 
+            'filter-gold',
+            'filter-red-noir',
+            'filter-cyber-purple',
+            'filter-amber'
+        ];
+
+        let lastFilterIndex = -1;
+
+        // Выбор фильтра с защитой от повтора подряд
+        function getNextFilter() {
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * filters.length);
+            } while (randomIndex === lastFilterIndex && filters.length > 1);
+            
+            lastFilterIndex = randomIndex;
+            return filters[randomIndex];
+        }
 
         uploadBox.addEventListener('click', () => fileInput.click());
 
@@ -420,6 +450,7 @@
             userPhoto.src = '';
             fileInput.value = '';
             card.className = 'card';
+            lastFilterIndex = -1;
         });
 
         function initAudio() {
@@ -442,7 +473,6 @@
             osc.stop(audioCtx.currentTime + 0.03);
         }
 
-        // Возвращенный победный звук оглашения результатов
         function playWinSound() {
             if (!audioCtx) return;
             const now = audioCtx.currentTime;
@@ -520,8 +550,8 @@
             const maxTicks = 22 + Math.floor(Math.random() * 8);
 
             function roll() {
-                const randomFilter = filters[Math.floor(Math.random() * filters.length)];
-                card.className = 'card ' + randomFilter;
+                const nextFilter = getNextFilter();
+                card.className = 'card ' + nextFilter;
                 playTickSound();
                 spawnDice();
 
@@ -542,7 +572,6 @@
             spinBtn.innerText = '🎲 Прокрутить ещё раз';
             resetBtn.style.display = 'block';
 
-            // Проигрываем победный джингл
             playWinSound();
 
             if (typeof confetti === 'function') {
