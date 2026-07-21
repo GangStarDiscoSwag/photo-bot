@@ -4,7 +4,7 @@ const path = require('path');
 
 // Укажи здесь твой токен от @BotFather и URL от Render
 const BOT_TOKEN = process.env.BOT_TOKEN || '8230583476:AAFPHlyxmMxDac3hg80hyHpEBwWV8BKHZns';
-const WEBAPP_URL = process.env.WEBAPP_URL || 'https://photo-bot-xxxx.onrender.com'; 
+const WEBAPP_URL = process.env.WEBAPP_URL || 'https://photo-roulette-bot.onrender.com'; 
 
 const bot = new Telegraf(BOT_TOKEN);
 const app = express();
