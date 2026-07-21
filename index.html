@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Выпадайло v1.2.1</title>
+    <title>Выпадайло v1.2.3</title>
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -203,7 +203,6 @@
             margin-bottom: 5px;
         }
 
-        /* Статичное небесно-неоновое свечение без нагрузки на FPS */
         .card-neon-glow {
             position: absolute;
             inset: -4px;
@@ -321,7 +320,7 @@
         <div class="welcome-title">ВЫПАДАЙЛО</div>
         <div class="welcome-subtitle">испытай удачу</div>
         <button class="btn-start-main" id="startMainBtn">Начать</button>
-        <div class="version-start">Выпадайло v1.2.1</div>
+        <div class="version-start">Выпадайло v1.2.3</div>
     </div>
 
     <div class="game-screen" id="gameScreen">
@@ -443,6 +442,34 @@
             osc.stop(audioCtx.currentTime + 0.03);
         }
 
+        // Возвращенный победный звук оглашения результатов
+        function playWinSound() {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.type = 'triangle';
+            osc1.frequency.setValueAtTime(523.25, now);
+            gain1.gain.setValueAtTime(0.15, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            osc1.connect(gain1);
+            gain1.connect(audioCtx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.3);
+
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(783.99, now + 0.15);
+            gain2.gain.setValueAtTime(0.15, now + 0.15);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc2.start(now + 0.15);
+            osc2.stop(now + 0.6);
+        }
+
         function spawnDice() {
             const dice = document.createElement('div');
             dice.className = 'dice-particle';
@@ -514,6 +541,9 @@
             spinBtn.disabled = false;
             spinBtn.innerText = '🎲 Прокрутить ещё раз';
             resetBtn.style.display = 'block';
+
+            // Проигрываем победный джингл
+            playWinSound();
 
             if (typeof confetti === 'function') {
                 confetti({ particleCount: 80, spread: 70, origin: { y: 0.65 } });
