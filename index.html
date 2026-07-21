@@ -45,7 +45,7 @@
             position: relative;
         }
 
-        /* [BLOCK_2: BG GLOW] Огромный квадрат без темноты */
+        /* [BLOCK_2: BG GLOW] */
         .bg-glow-main {
             position: fixed;
             width: 300vw;
@@ -67,7 +67,7 @@
             100% { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
-        /* [BLOCK_3: WELCOME SCREEN] Текст с анимацией перелива и четким свечением */
+        /* [BLOCK_3: WELCOME SCREEN] */
         .welcome-screen {
             display: flex;
             flex-direction: column;
@@ -357,6 +357,7 @@
 
         let isPhotoLoaded = false;
         let audioCtx = null;
+        let isSpinning = false;
 
         let currentTiltX = 0, currentTiltY = 0;
         let targetTiltX = 0, targetTiltY = 0;
@@ -389,6 +390,11 @@
         });
 
         resetBtn.addEventListener('click', () => {
+            // Очищаем старые конфетти и останавливаем их холст при возврате на экран загрузки
+            if (typeof confetti === 'function' && confetti.reset) {
+                confetti.reset();
+            }
+
             gameScreen.classList.remove('active');
             welcomeScreen.classList.remove('hidden');
             gameHeader.innerText = 'ЗАГРУЗИ ФОТО';
@@ -397,8 +403,10 @@
             controlsBox.style.display = 'none';
             resetBtn.style.display = 'none';
             isPhotoLoaded = false;
+            isSpinning = false;
             userPhoto.src = '';
             fileInput.value = '';
+            card.className = 'card';
         });
 
         function initAudio() {
@@ -453,13 +461,19 @@
 
         spinBtn.addEventListener('click', () => {
             initAudio();
-            if (isPhotoLoaded) startRoulette();
+            if (isPhotoLoaded && !isSpinning) startRoulette();
         });
 
         function startRoulette() {
+            isSpinning = true;
             spinBtn.disabled = true;
             resetBtn.style.display = 'none';
             gameHeader.innerText = 'ВЫПАДАЙЛО';
+
+            // Принудительно очищаем старые конфетти перед новым запуском рулетки
+            if (typeof confetti === 'function' && confetti.reset) {
+                confetti.reset();
+            }
 
             let speed = 40;
             let ticks = 0;
@@ -483,6 +497,7 @@
         }
 
         function finishRoulette() {
+            isSpinning = false;
             spinBtn.disabled = false;
             spinBtn.innerText = '🎲 Прокрутить ещё раз';
             resetBtn.style.display = 'block';
