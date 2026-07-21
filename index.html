@@ -203,36 +203,17 @@
             margin-bottom: 5px;
         }
 
-        /* Плавный перелив цвета без вращения блока (новые цвета) */
+        /* Статичное небесно-неоновое свечение без нагрузки на FPS */
         .card-neon-glow {
             position: absolute;
             inset: -4px;
             border-radius: 28px;
-            background: linear-gradient(130deg, #adddff, #fffd70, #42ffd0, #adddff);
-            background-size: 300% 300%;
+            background: #adddff;
             filter: blur(14px);
-            opacity: 0.95;
+            opacity: 0.85;
             z-index: 0;
             pointer-events: none;
-            animation: shiftGlow 5s ease infinite alternate;
-        }
-
-        @keyframes shiftGlow {
-            0% {
-                background-position: 0% 50%;
-                filter: blur(12px) hue-rotate(0deg);
-                box-shadow: 0 0 30px rgba(173, 221, 255, 0.8);
-            }
-            50% {
-                background-position: 100% 50%;
-                filter: blur(16px) hue-rotate(45deg);
-                box-shadow: 0 0 40px rgba(255, 253, 112, 0.8);
-            }
-            100% {
-                background-position: 0% 50%;
-                filter: blur(14px) hue-rotate(90deg);
-                box-shadow: 0 0 35px rgba(66, 255, 208, 0.8);
-            }
+            box-shadow: 0 0 30px rgba(173, 221, 255, 0.7);
         }
 
         .card {
