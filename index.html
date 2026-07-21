@@ -203,23 +203,36 @@
             margin-bottom: 5px;
         }
 
-        /* Переливающийся инверсивный неоновый ореол */
+        /* Плавный перелив цвета без вращения блока */
         .card-neon-glow {
             position: absolute;
-            inset: -5px;
+            inset: -4px;
             border-radius: 28px;
-            background: conic-gradient(from 0deg, #00ffff, #7efd38, #ff66cc, #b566ff, #00ffff);
+            background: linear-gradient(130deg, #00ffff, #00ffaa, #ff00ee, #00ffff);
+            background-size: 300% 300%;
             filter: blur(14px);
             opacity: 0.9;
             z-index: 0;
             pointer-events: none;
-            box-shadow: 0 0 30px rgba(0, 255, 255, 0.6), 0 0 50px rgba(126, 253, 56, 0.4);
-            animation: rotateNeon 6s linear infinite;
+            animation: shiftGlow 5s ease infinite alternate;
         }
 
-        @keyframes rotateNeon {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes shiftGlow {
+            0% {
+                background-position: 0% 50%;
+                filter: blur(12px) hue-rotate(0deg);
+                box-shadow: 0 0 25px rgba(0, 255, 255, 0.7);
+            }
+            50% {
+                background-position: 100% 50%;
+                filter: blur(16px) hue-rotate(90deg);
+                box-shadow: 0 0 35px rgba(0, 255, 170, 0.8);
+            }
+            100% {
+                background-position: 0% 50%;
+                filter: blur(14px) hue-rotate(180deg);
+                box-shadow: 0 0 30px rgba(255, 0, 238, 0.7);
+            }
         }
 
         .card {
