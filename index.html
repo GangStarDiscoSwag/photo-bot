@@ -10,8 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
-            --bg-color: #0f0f13;
-            --card-bg: #1a1a24;
+            --bg-color: #0b0b10;
+            --card-bg: #14141c;
             --accent-color: #8a2be2;
             --accent-glow: #00ffff;
             --text-color: #ffffff;
@@ -37,20 +37,44 @@
             padding: 20px;
             overflow: hidden;
             perspective: 1000px;
+            position: relative;
+        }
+
+        /* Динамический задний фон с неоновыми переливами */
+        .bg-glow {
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(138, 43, 226, 0.25) 0%, rgba(0, 255, 255, 0.1) 50%, transparent 80%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -2;
+            pointer-events: none;
+            filter: blur(40px); /* Усиленное размытие свечения */
+            animation: pulseGlow 6s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.7; }
+            100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
         }
 
         .header {
             text-align: center;
             margin-top: 10px;
+            z-index: 2;
         }
 
         .header h1 {
-            font-size: 28px;
-            font-weight: 800;
+            font-size: 30px;
+            font-weight: 900;
             background: linear-gradient(45deg, #ff007f, var(--accent-glow));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            /* Усиленное размытие свечения за текстом */
+            text-shadow: 0 0 25px rgba(0, 255, 255, 0.6), 0 0 45px rgba(255, 0, 127, 0.4);
+            letter-spacing: 1px;
         }
 
         /* 3D-Карточка с гироскопом */
@@ -59,22 +83,24 @@
             height: 380px;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.1s ease-out;
-            margin: 20px 0;
+            transition: transform 0.08s ease-out;
+            margin: 15px 0;
+            z-index: 2;
         }
 
         .card {
             width: 100%;
             height: 100%;
             background: var(--card-bg);
-            border-radius: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 15px rgba(138, 43, 226, 0.2);
+            border-radius: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 25px rgba(138, 43, 226, 0.3);
             overflow: hidden;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: border-color 0.3s;
         }
 
         .card img {
@@ -86,63 +112,89 @@
 
         .placeholder {
             text-align: center;
-            color: #666;
+            color: #888;
             padding: 20px;
         }
 
         .placeholder-icon {
-            font-size: 48px;
-            margin-bottom: 10px;
+            font-size: 52px;
+            margin-bottom: 12px;
             display: block;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
         }
 
-        /* Блик от света (Glint) */
+        /* Блик от света (Glint) поверх фото */
         .glint {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 60%);
+            background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0) 70%);
             pointer-events: none;
-            border-radius: 20px;
+            border-radius: 24px;
+            z-index: 3;
+        }
+
+        /* Падающие квадратные фигурки / элементы рулетки (как в оригинале) */
+        .roulette-overlay {
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            border: 3px dashed rgba(0, 255, 255, 0.4);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 4;
+        }
+        
+        .card.spinning .roulette-overlay {
+            opacity: 1;
+            animation: borderSpin 0.5s linear infinite;
+        }
+
+        @keyframes borderSpin {
+            0% { border-color: rgba(0, 255, 255, 0.6); box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.3); }
+            50% { border-color: rgba(255, 0, 127, 0.6); box-shadow: inset 0 0 15px rgba(255, 0, 127, 0.3); }
+            100% { border-color: rgba(0, 255, 255, 0.6); box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.3); }
         }
 
         /* Фильтры стилей */
-        .filter-cyberpunk { filter: contrast(1.3) saturate(1.8) hue-rotate(-20deg); }
-        .filter-matrix { filter: sepia(1) hue-rotate(80deg) saturate(3) contrast(1.2); }
-        .filter-retro { filter: sepia(0.4) contrast(1.1) brightness(0.9) saturate(1.3); }
-        .filter-neon { filter: invert(0.1) hue-rotate(180deg) saturate(2); }
-        .filter-noir { filter: grayscale(1) contrast(1.8) brightness(0.8); }
-        .filter-gold { filter: sepia(0.8) saturate(2.5) contrast(1.2) brightness(1.1); }
+        .filter-cyberpunk { filter: contrast(1.35) saturate(1.9) hue-rotate(-20deg); }
+        .filter-matrix { filter: sepia(1) hue-rotate(80deg) saturate(3.5) contrast(1.25); }
+        .filter-retro { filter: sepia(0.45) contrast(1.15) brightness(0.9) saturate(1.4); }
+        .filter-neon { filter: invert(0.12) hue-rotate(180deg) saturate(2.2); }
+        .filter-noir { filter: grayscale(1) contrast(1.9) brightness(0.75); }
+        .filter-gold { filter: sepia(0.85) saturate(2.8) contrast(1.25) brightness(1.15); }
 
-        /* Кнопка рулетки */
+        /* Элементы управления */
         .controls {
             width: 100%;
             max-width: 280px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            z-index: 2;
         }
 
         .btn-spin {
             width: 100%;
             padding: 16px;
             border: none;
-            border-radius: 14px;
+            border-radius: 16px;
             background: linear-gradient(45deg, #8a2be2, #ff007f);
             color: #fff;
             font-size: 18px;
-            font-weight: bold;
+            font-weight: 800;
             cursor: pointer;
-            box-shadow: 0 5px 20px rgba(255, 0, 127, 0.4);
+            box-shadow: 0 8px 25px rgba(255, 0, 127, 0.45);
             transition: transform 0.1s, box-shadow 0.2s;
         }
 
         .btn-spin:active {
-            transform: scale(0.96);
+            transform: scale(0.95);
         }
 
         .btn-spin:disabled {
-            opacity: 0.5;
+            opacity: 0.6;
             cursor: not-allowed;
         }
 
@@ -152,13 +204,16 @@
 
         .footer-version {
             font-size: 11px;
-            color: #444;
-            align-self: flex-end;
-            margin-top: 5px;
+            color: #555;
+            align-self: center;
+            margin-bottom: 5px;
+            z-index: 2;
         }
     </style>
 </head>
 <body>
+
+    <div class="bg-glow"></div>
 
     <div class="header">
         <h1>ВЫПАДАЙЛО</h1>
@@ -166,6 +221,7 @@
 
     <div class="card-container" id="cardContainer">
         <div class="card" id="card">
+            <div class="roulette-overlay"></div>
             <div class="glint"></div>
             <div class="placeholder" id="placeholder">
                 <span class="placeholder-icon">🎰</span>
@@ -183,7 +239,7 @@
     <div class="footer-version">Выпадайло v1.2</div>
 
     <script>
-        // Инициализация Telegram WebApp сразу без задержек
+        // Инициализация Telegram WebApp сразу без задержек (исправление таймаута)
         const tg = window.Telegram?.WebApp;
         if (tg) {
             tg.ready();
@@ -216,19 +272,19 @@
             }
         }
 
-        // Простой звук щелчка рулетки
+        // Звук щелчка рулетки
         function playTickSound() {
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+            osc.frequency.setValueAtTime(1400, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.025);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.03);
+            osc.stop(audioCtx.currentTime + 0.025);
         }
 
         // Главная кнопка
@@ -260,19 +316,20 @@
         // Вращение рулетки
         function startRoulette() {
             spinBtn.disabled = true;
-            let speed = 50;
+            card.classList.add('spinning');
+            let speed = 40;
             let ticks = 0;
-            const maxTicks = 20 + Math.floor(Math.random() * 10);
+            const maxTicks = 22 + Math.floor(Math.random() * 8);
 
             function roll() {
-                // Случайный фильтр
                 const randomFilter = filters[Math.floor(Math.random() * filters.length)];
-                card.className = 'card ' + randomFilter;
+                // Оставляем только класс фильтра и класс вращения
+                card.className = 'card spinning ' + randomFilter;
                 playTickSound();
 
                 ticks++;
                 if (ticks < maxTicks) {
-                    speed += 15; // Замедление
+                    speed += 14; // Плавное замедление
                     setTimeout(roll, speed);
                 } else {
                     finishRoulette();
@@ -284,15 +341,16 @@
 
         // Завершение рулетки и салют
         function finishRoulette() {
+            card.classList.remove('spinning');
             spinBtn.disabled = false;
             spinBtn.innerText = '🎲 Прокрутить ещё раз';
 
             // Конфетти
             if (typeof confetti === 'function') {
                 confetti({
-                    particleCount: 70,
-                    spread: 60,
-                    origin: { y: 0.7 }
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.65 }
                 });
             }
         }
@@ -300,8 +358,8 @@
         // Плавный гироскоп (Tilt эффект)
         window.addEventListener('deviceorientation', (e) => {
             if (!e.gamma || !e.beta) return;
-            const tiltX = Math.max(-15, Math.min(15, e.gamma / 2));
-            const tiltY = Math.max(-15, Math.min(15, (e.beta - 40) / 2));
+            const tiltX = Math.max(-12, Math.min(12, e.gamma / 2.2));
+            const tiltY = Math.max(-12, Math.min(12, (e.beta - 40) / 2.2));
             cardContainer.style.transform = `rotateY(${tiltX}deg) rotateX(${-tiltY}deg)`;
         });
     </script>
