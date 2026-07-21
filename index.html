@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Выпадайло v1.2</title>
+    <title>Выпадайло v1.2.1</title>
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -193,7 +193,7 @@
             gap: 8px;
         }
 
-        /* [BLOCK_5: CARD & FILTERS] */
+        /* [BLOCK_5: CARD & NEON GLOW] */
         .card-container {
             width: 270px;
             height: 350px;
@@ -203,15 +203,35 @@
             margin-bottom: 5px;
         }
 
+        /* Инверсивный неоновый ореол ЗА карточкой */
+        .card-neon-glow {
+            position: absolute;
+            inset: -4px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, #00ffff, #00ff66);
+            filter: blur(12px);
+            opacity: 0.85;
+            z-index: 0;
+            pointer-events: none;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.8), 0 0 50px rgba(0, 255, 102, 0.5);
+            animation: neonPulse 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes neonPulse {
+            0% { opacity: 0.7; filter: blur(10px); }
+            100% { opacity: 0.95; filter: blur(16px); }
+        }
+
         .card {
             width: 100%;
             height: 100%;
             background: var(--card-bg);
             border-radius: 24px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 25px rgba(168, 36, 232, 0.4);
+            border: 2px solid #00ffff;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.9);
             overflow: hidden;
             position: relative;
+            z-index: 1;
         }
 
         .card img {
@@ -307,7 +327,7 @@
         <div class="welcome-title">ВЫПАДАЙЛО</div>
         <div class="welcome-subtitle">испытай удачу</div>
         <button class="btn-start-main" id="startMainBtn">Начать</button>
-        <div class="version-start">Выпадайло v1.2</div>
+        <div class="version-start">Выпадайло v1.2.1</div>
     </div>
 
     <div class="game-screen" id="gameScreen">
@@ -318,6 +338,7 @@
         </div>
 
         <div class="card-container" id="cardContainer">
+            <div class="card-neon-glow"></div>
             <div class="card" id="card">
                 <div class="glint" id="glint"></div>
                 <img id="userPhoto" alt="Photo">
@@ -390,7 +411,6 @@
         });
 
         resetBtn.addEventListener('click', () => {
-            // Очищаем старые конфетти и останавливаем их холст при возврате на экран загрузки
             if (typeof confetti === 'function' && confetti.reset) {
                 confetti.reset();
             }
@@ -470,7 +490,6 @@
             resetBtn.style.display = 'none';
             gameHeader.innerText = 'ВЫПАДАЙЛО';
 
-            // Принудительно очищаем старые конфетти перед новым запуском рулетки
             if (typeof confetti === 'function' && confetti.reset) {
                 confetti.reset();
             }
