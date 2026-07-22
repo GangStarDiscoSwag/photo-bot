@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Выпадайло v1.2.8</title>
+    <title>Выпадайло v1.2.9</title>
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -339,7 +339,7 @@
         <div class="welcome-title">ВЫПАДАЙЛО</div>
         <div class="welcome-subtitle">испытай удачу</div>
         <button class="btn-start-main" id="startMainBtn">Начать</button>
-        <div class="version-start">Выпадайло v1.2.8</div>
+        <div class="version-start">Выпадайло v1.2.9</div>
     </div>
 
     <div class="game-screen" id="gameScreen">
@@ -433,7 +433,6 @@
 
         /* --- [3D НАКЛОНЫ КАРТОЧКИ С УВЕЛИЧЕННЫМ УГЛОМ] --- */
         function applyCardTilt(rotateX, rotateY) {
-            // Углы наклона усилены (ограничение до ±28 градусов)
             const clampedX = Math.max(-28, Math.min(28, rotateX));
             const clampedY = Math.max(-28, Math.min(28, rotateY));
             
@@ -441,15 +440,13 @@
             userPhoto.style.transform = `translate3d(${-clampedY * 0.8}px, ${clampedX * 0.8}px, 0)`;
         }
 
-        // Гироскоп мобильного устройства
         window.addEventListener('deviceorientation', (e) => {
             if (!isPhotoLoaded) return;
-            const tiltX = (e.beta || 0) - 45; // Базовый угол удержания смартфона
+            const tiltX = (e.beta || 0) - 45;
             const tiltY = e.gamma || 0;
             applyCardTilt(-tiltX * 0.7, tiltY * 0.7);
         });
 
-        // Движение мыши (для теста с ПК)
         window.addEventListener('mousemove', (e) => {
             if (!isPhotoLoaded) return;
             const x = (e.clientX / window.innerWidth - 0.5) * 50;
@@ -461,6 +458,7 @@
             fileInput.click();
         });
 
+        // Увеличен звук запуска (0.2 -> 0.4)
         function playStartSound() {
             if (!audioCtx) return;
             const now = audioCtx.currentTime;
@@ -469,7 +467,7 @@
             osc.type = 'sine';
             osc.frequency.setValueAtTime(440, now);
             osc.frequency.setValueAtTime(659.25, now + 0.15);
-            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.setValueAtTime(0.4, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
@@ -512,13 +510,14 @@
             }
         }
 
+        // Увеличен звук тиканья (0.04 -> 0.08)
         function playTickSound() {
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
@@ -526,6 +525,7 @@
             osc.stop(audioCtx.currentTime + 0.03);
         }
 
+        // Увеличен звук победы (0.15 -> 0.30)
         function playWinSound() {
             if (!audioCtx) return;
             const now = audioCtx.currentTime;
@@ -534,7 +534,7 @@
             const gain1 = audioCtx.createGain();
             osc1.type = 'triangle';
             osc1.frequency.setValueAtTime(523.25, now);
-            gain1.gain.setValueAtTime(0.15, now);
+            gain1.gain.setValueAtTime(0.30, now);
             gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
             osc1.connect(gain1);
             gain1.connect(audioCtx.destination);
@@ -545,7 +545,7 @@
             const gain2 = audioCtx.createGain();
             osc2.type = 'triangle';
             osc2.frequency.setValueAtTime(783.99, now + 0.15);
-            gain2.gain.setValueAtTime(0.15, now + 0.15);
+            gain2.gain.setValueAtTime(0.30, now + 0.15);
             gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
             osc2.connect(gain2);
             gain2.connect(audioCtx.destination);
