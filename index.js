@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 
 // Токен и URL твоего приложения
-const BOT_TOKEN = process.env.BOT_TOKEN || '8230583476:AAFPHlyxmMxDac3hg80hyHpEBwWV8BKHZnS';
+const BOT_TOKEN = process.env.BOT_TOKEN || '8230583476:AAFPHlyxmMxDac3hg80hyHpEBwWV8BKHZns';
 const WEBAPP_URL = process.env.WEBAPP_URL || 'https://photo-roulette-bot.onrender.com';
 
 const bot = new Telegraf(BOT_TOKEN);
