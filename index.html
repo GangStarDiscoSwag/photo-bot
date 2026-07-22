@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Выпадайло v1.2.5</title>
+    <title>Выпадайло v1.2.6</title>
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -60,6 +60,7 @@
             filter: blur(25px);
             opacity: 0.85;
             animation: rotateBg 15s linear infinite;
+            transition: background 0.3s ease;
         }
 
         @keyframes rotateBg {
@@ -332,14 +333,14 @@
 </head>
 <body>
 
-    <div class="bg-glow-main"></div>
+    <div class="bg-glow-main" id="bgGlow"></div>
 
     <!-- [BLOCK_7: MARKUP HTML] -->
     <div class="welcome-screen" id="welcomeScreen">
         <div class="welcome-title">ВЫПАДАЙЛО</div>
         <div class="welcome-subtitle">испытай удачу</div>
         <button class="btn-start-main" id="startMainBtn">Начать</button>
-        <div class="version-start">Выпадайло v1.2.5</div>
+        <div class="version-start">Выпадайло v1.2.6</div>
     </div>
 
     <div class="game-screen" id="gameScreen">
@@ -374,30 +375,6 @@
             if (tg.lockOrientation) { tg.lockOrientation(); }
         }
 
-        // Хелпер для Haptic Feedback с фоллбеком на Vibration API
-        function triggerHaptic(type, style = 'light') {
-            // 1. Пробуем Telegram WebApp API
-            if (tg?.HapticFeedback) {
-                if (type === 'impact') {
-                    tg.HapticFeedback.impactOccurred(style);
-                    return;
-                } else if (type === 'notification') {
-                    tg.HapticFeedback.notificationOccurred(style);
-                    return;
-                }
-            }
-
-            // 2. Запасной вариант (Стандартный браузерный Vibration API)
-            if (navigator.vibrate) {
-                if (type === 'impact') {
-                    const duration = style === 'heavy' ? 30 : (style === 'medium' ? 20 : 10);
-                    navigator.vibrate(duration);
-                } else if (type === 'notification') {
-                    navigator.vibrate([40, 50, 40]);
-                }
-            }
-        }
-
         const welcomeScreen = document.getElementById('welcomeScreen');
         const gameScreen = document.getElementById('gameScreen');
         const startMainBtn = document.getElementById('startMainBtn');
@@ -411,6 +388,7 @@
         const userPhoto = document.getElementById('userPhoto');
         const card = document.getElementById('card');
         const glint = document.getElementById('glint');
+        const bgGlow = document.getElementById('bgGlow');
 
         let isPhotoLoaded = false;
         let audioCtx = null;
@@ -428,6 +406,20 @@
             'filter-amber'
         ];
 
+        // Карта фоновых градиентов под каждый фильтр
+        const bgGlowStyles = {
+            'filter-cyberpunk': 'radial-gradient(circle, rgba(255, 0, 127, 0.7) 0%, rgba(0, 255, 255, 0.5) 45%, #120524 80%), conic-gradient(from 0deg, #ff007f, #00ffff, #ff007f)',
+            'filter-matrix': 'radial-gradient(circle, rgba(0, 255, 65, 0.7) 0%, rgba(0, 50, 0, 0.6) 50%, #051405 80%), conic-gradient(from 0deg, #00ff41, #003b00, #00ff41)',
+            'filter-retro': 'radial-gradient(circle, rgba(235, 130, 60, 0.7) 0%, rgba(120, 40, 140, 0.5) 50%, #17051a 80%), conic-gradient(from 0deg, #eb823c, #78288c, #eb823c)',
+            'filter-neon': 'radial-gradient(circle, rgba(0, 100, 255, 0.7) 0%, rgba(180, 0, 255, 0.5) 50%, #050a24 80%), conic-gradient(from 0deg, #0064ff, #b400ff, #0064ff)',
+            'filter-noir': 'radial-gradient(circle, rgba(180, 180, 180, 0.3) 0%, rgba(40, 40, 40, 0.6) 50%, #080808 80%), conic-gradient(from 0deg, #555, #111, #555)',
+            'filter-gold': 'radial-gradient(circle, rgba(255, 215, 0, 0.7) 0%, rgba(255, 100, 0, 0.4) 50%, #1a1202 80%), conic-gradient(from 0deg, #ffd700, #ff6400, #ffd700)',
+            'filter-red-noir': 'radial-gradient(circle, rgba(255, 0, 50, 0.75) 0%, rgba(20, 0, 0, 0.8) 50%, #100202 80%), conic-gradient(from 0deg, #ff0032, #200000, #ff0032)',
+            'filter-cyber-purple': 'radial-gradient(circle, rgba(168, 36, 232, 0.8) 0%, rgba(0, 255, 255, 0.4) 50%, #120524 80%), conic-gradient(from 0deg, #a824e8, #00ffff, #a824e8)',
+            'filter-amber': 'radial-gradient(circle, rgba(255, 160, 0, 0.75) 0%, rgba(100, 30, 0, 0.6) 50%, #1a0a02 80%), conic-gradient(from 0deg, #ffa000, #641e00, #ffa000)',
+            'default': 'radial-gradient(circle, rgba(168, 36, 232, 0.6) 0%, rgba(255, 0, 127, 0.4) 40%, #120524 75%), conic-gradient(from 0deg, #a824e8, #ff007f, #00ffff, #a824e8)'
+        };
+
         let lastFilterIndex = -1;
 
         function getNextFilter() {
@@ -441,7 +433,6 @@
         }
 
         uploadBox.addEventListener('click', () => {
-            triggerHaptic('impact', 'light');
             fileInput.click();
         });
 
@@ -464,13 +455,11 @@
         startMainBtn.addEventListener('click', () => {
             initAudio();
             playStartSound();
-            triggerHaptic('impact', 'medium');
             welcomeScreen.classList.add('hidden');
             gameScreen.classList.add('active');
         });
 
         resetBtn.addEventListener('click', () => {
-            triggerHaptic('impact', 'light');
             if (typeof confetti === 'function' && confetti.reset) {
                 confetti.reset();
             }
@@ -487,6 +476,7 @@
             userPhoto.src = '';
             fileInput.value = '';
             card.className = 'card';
+            bgGlow.style.background = bgGlowStyles['default'];
             lastFilterIndex = -1;
         });
 
@@ -569,7 +559,6 @@
 
         spinBtn.addEventListener('click', () => {
             initAudio();
-            triggerHaptic('impact', 'medium');
             if (isPhotoLoaded && !isSpinning) startRoulette();
         });
 
@@ -591,8 +580,13 @@
             function roll() {
                 const nextFilter = getNextFilter();
                 card.className = 'card ' + nextFilter;
+                
+                // Менять цвет фона под текущий фильтр
+                if (bgGlowStyles[nextFilter]) {
+                    bgGlow.style.background = bgGlowStyles[nextFilter];
+                }
+
                 playTickSound();
-                triggerHaptic('impact', 'light');
                 spawnDice();
 
                 ticks++;
@@ -614,7 +608,6 @@
 
             card.classList.add('glitch-active');
             playWinSound();
-            triggerHaptic('notification', 'success');
 
             if (typeof confetti === 'function') {
                 confetti({
