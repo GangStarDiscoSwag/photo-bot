@@ -374,6 +374,17 @@
             if (tg.lockOrientation) { tg.lockOrientation(); }
         }
 
+        // Хелпер для Haptic Feedback (Виброотклика)
+        function triggerHaptic(type, style = 'light') {
+            if (tg?.HapticFeedback) {
+                if (type === 'impact') {
+                    tg.HapticFeedback.impactOccurred(style);
+                } else if (type === 'notification') {
+                    tg.HapticFeedback.notificationOccurred(style);
+                }
+            }
+        }
+
         const welcomeScreen = document.getElementById('welcomeScreen');
         const gameScreen = document.getElementById('gameScreen');
         const startMainBtn = document.getElementById('startMainBtn');
@@ -391,9 +402,6 @@
         let isPhotoLoaded = false;
         let audioCtx = null;
         let isSpinning = false;
-
-        let currentTiltX = 0, currentTiltY = 0;
-        let targetTiltX = 0, targetTiltY = 0;
 
         const filters = [
             'filter-cyberpunk', 
@@ -419,7 +427,10 @@
             return filters[randomIndex];
         }
 
-        uploadBox.addEventListener('click', () => fileInput.click());
+        uploadBox.addEventListener('click', () => {
+            triggerHaptic('impact', 'light');
+            fileInput.click();
+        });
 
         function playStartSound() {
             if (!audioCtx) return;
@@ -440,11 +451,13 @@
         startMainBtn.addEventListener('click', () => {
             initAudio();
             playStartSound();
+            triggerHaptic('impact', 'medium');
             welcomeScreen.classList.add('hidden');
             gameScreen.classList.add('active');
         });
 
         resetBtn.addEventListener('click', () => {
+            triggerHaptic('impact', 'light');
             if (typeof confetti === 'function' && confetti.reset) {
                 confetti.reset();
             }
@@ -543,6 +556,7 @@
 
         spinBtn.addEventListener('click', () => {
             initAudio();
+            triggerHaptic('impact', 'medium');
             if (isPhotoLoaded && !isSpinning) startRoulette();
         });
 
@@ -565,6 +579,7 @@
                 const nextFilter = getNextFilter();
                 card.className = 'card ' + nextFilter;
                 playTickSound();
+                triggerHaptic('impact', 'light'); // Легкий виброотклик на каждый тик
                 spawnDice();
 
                 ticks++;
@@ -581,39 +596,21 @@
         function finishRoulette() {
             isSpinning = false;
             spinBtn.disabled = false;
-            spinBtn.innerText = '🎲 Прокрутить ещё раз';
             resetBtn.style.display = 'block';
+            gameHeader.innerText = 'ТВОЙ СТИЛЬ!';
 
-            // Эффект неонового глитча в момент победы
             card.classList.add('glitch-active');
-            setTimeout(() => card.classList.remove('glitch-active'), 350);
-
             playWinSound();
+            triggerHaptic('notification', 'success'); // Мощный победный виброотклик
 
             if (typeof confetti === 'function') {
-                confetti({ particleCount: 80, spread: 70, origin: { y: 0.65 } });
+                confetti({
+                    particleCount: 70,
+                    spread: 60,
+                    origin: { y: 0.7 }
+                });
             }
         }
-
-        // Увеличен градус наклона наклона карточки (с 12deg до 24deg)
-        window.addEventListener('deviceorientation', (e) => {
-            if (!e.gamma || !e.beta) return;
-            targetTiltX = Math.max(-24, Math.min(24, e.gamma / 1.2));
-            targetTiltY = Math.max(-24, Math.min(24, (e.beta - 40) / 1.2));
-        });
-
-        function animateTilt() {
-            if (isPhotoLoaded) {
-                currentTiltX += (targetTiltX - currentTiltX) * 0.1;
-                currentTiltY += (targetTiltY - currentTiltY) * 0.1;
-
-                cardContainer.style.transform = `rotateY(${currentTiltX}deg) rotateX(${-currentTiltY}deg)`;
-                userPhoto.style.transform = `translate3d(${-currentTiltX * 0.5}px, ${-currentTiltY * 0.5}px, 0)`;
-                glint.style.background = `linear-gradient(${135 + currentTiltX}deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.08) 40%, transparent 65%)`;
-            }
-            requestAnimationFrame(animateTilt);
-        }
-        animateTilt();
     </script>
 </body>
 </html>
