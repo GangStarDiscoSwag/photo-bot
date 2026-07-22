@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Выпадайло</title>
+    <title>Выпадайло v1.3.0</title>
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -145,9 +145,9 @@
         .game-screen.active { display: flex; }
 
         .header-title {
-            font-size: 26px;
+            font-size: 32px;
             font-weight: 900;
-            letter-spacing: 1.5px;
+            letter-spacing: 2px;
             background: linear-gradient(90deg, #e6007e 0%, #a824e8 50%, #00ffff 100%);
             background-size: 200% auto;
             -webkit-background-clip: text;
@@ -156,7 +156,6 @@
             animation: textGlowFlow 4s linear infinite;
             text-align: center;
             filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.8));
-            padding: 0 10px;
         }
 
         @keyframes textGlowFlow {
@@ -275,7 +274,7 @@
             100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(360deg) scale(1.6); }
         }
 
-        /* --- Фильтры Цвета --- */
+        /* --- Фильтры --- */
         .filter-cyberpunk { filter: contrast(1.35) saturate(1.9) hue-rotate(-20deg); }
         .filter-matrix { filter: sepia(1) hue-rotate(80deg) saturate(3.5) contrast(1.25); }
         .filter-retro { filter: sepia(0.45) contrast(1.15) brightness(0.9) saturate(1.4); }
@@ -340,7 +339,7 @@
         <div class="welcome-title">ВЫПАДАЙЛО</div>
         <div class="welcome-subtitle">испытай удачу</div>
         <button class="btn-start-main" id="startMainBtn">Начать</button>
-        <div class="version-start">Выпадайло</div>
+        <div class="version-start">Выпадайло v1.3.0</div>
     </div>
 
     <div class="game-screen" id="gameScreen">
@@ -366,9 +365,6 @@
         <input type="file" id="fileInput" accept="image/*">
     </div>
 
-    <!-- Скрытый холст для геометрических деформаций -->
-    <canvas id="warpCanvas" style="display: none;"></canvas>
-
     <!-- [BLOCK_8: JS LOGIC] -->
     <script>
         const tg = window.Telegram?.WebApp;
@@ -392,29 +388,22 @@
         const card = document.getElementById('card');
         const glint = document.getElementById('glint');
         const bgGlow = document.getElementById('bgGlow');
-        const warpCanvas = document.getElementById('warpCanvas');
 
         let isPhotoLoaded = false;
         let audioCtx = null;
         let isSpinning = false;
-        let currentWinningStyleKey = '';
-        let originalImageObject = new Image();
+        let currentWinningFilter = '';
 
-        // Полная база стилей с русской локализацией названий
-        const styles = [
-            { id: 'filter-cyberpunk', name: 'КИБЕРПАНК 2077', type: 'color' },
-            { id: 'filter-matrix', name: 'МАТРИЦА', type: 'color' },
-            { id: 'filter-retro', name: 'РЕТРО ВАЙБ', type: 'color' },
-            { id: 'filter-neon', name: 'НЕОНОВЫЙ ГЛЯНЕЦ', type: 'color' },
-            { id: 'filter-noir', name: 'ТЕМНЫЙ НУАР', type: 'color' },
-            { id: 'filter-gold', name: 'ЧИСТОЕ ЗОЛОТО', type: 'color' },
-            { id: 'filter-red-noir', name: 'КРАСНЫЙ НУАР', type: 'color' },
-            { id: 'filter-cyber-purple', name: 'КИБЕР ФИОЛЕТ', type: 'color' },
-            { id: 'filter-amber', name: 'ЯНТАРНЫЙ СВЕТ', type: 'color' },
-            { id: 'geo-fisheye', name: 'РЫБИЙ ГЛАЗ', type: 'geo', geoType: 'fisheye' },
-            { id: 'geo-twirl', name: 'СПИРАЛЬНЫЙ ВИХРЬ', type: 'geo', geoType: 'twirl' },
-            { id: 'geo-wave', name: 'ЖИДКАЯ ВОЛНА', type: 'geo', geoType: 'wave' },
-            { id: 'geo-vortex', name: 'ЧЕРНАЯ ДЫРА', type: 'geo', geoType: 'vortex' }
+        const filters = [
+            'filter-cyberpunk', 
+            'filter-matrix', 
+            'filter-retro', 
+            'filter-neon', 
+            'filter-noir', 
+            'filter-gold',
+            'filter-red-noir',
+            'filter-cyber-purple',
+            'filter-amber'
         ];
 
         const bgGlowStyles = {
@@ -427,96 +416,19 @@
             'filter-red-noir': 'radial-gradient(circle, rgba(255, 0, 50, 0.75) 0%, rgba(20, 0, 0, 0.8) 50%, #100202 80%), conic-gradient(from 0deg, #ff0032, #200000, #ff0032)',
             'filter-cyber-purple': 'radial-gradient(circle, rgba(168, 36, 232, 0.8) 0%, rgba(0, 255, 255, 0.4) 50%, #120524 80%), conic-gradient(from 0deg, #a824e8, #00ffff, #a824e8)',
             'filter-amber': 'radial-gradient(circle, rgba(255, 160, 0, 0.75) 0%, rgba(100, 30, 0, 0.6) 50%, #1a0a02 80%), conic-gradient(from 0deg, #ffa000, #641e00, #ffa000)',
-            'geo-fisheye': 'radial-gradient(circle, rgba(0, 255, 255, 0.8) 0%, rgba(0, 80, 255, 0.5) 50%, #020b1a 80%), conic-gradient(from 0deg, #00ffff, #0050ff, #00ffff)',
-            'geo-twirl': 'radial-gradient(circle, rgba(255, 0, 200, 0.8) 0%, rgba(100, 0, 255, 0.5) 50%, #15021a 80%), conic-gradient(from 0deg, #ff00c8, #6400ff, #ff00c8)',
-            'geo-wave': 'radial-gradient(circle, rgba(0, 255, 150, 0.8) 0%, rgba(0, 150, 255, 0.5) 50%, #021a12 80%), conic-gradient(from 0deg, #00ff96, #0096ff, #00ff96)',
-            'geo-vortex': 'radial-gradient(circle, rgba(180, 0, 255, 0.8) 0%, rgba(20, 0, 40, 0.8) 50%, #05000a 80%), conic-gradient(from 0deg, #b400ff, #140028, #b400ff)',
             'default': 'radial-gradient(circle, rgba(168, 36, 232, 0.6) 0%, rgba(255, 0, 127, 0.4) 40%, #120524 75%), conic-gradient(from 0deg, #a824e8, #ff007f, #00ffff, #a824e8)'
         };
 
-        let lastStyleIndex = -1;
+        let lastFilterIndex = -1;
 
-        function getNextStyle() {
+        function getNextFilter() {
             let randomIndex;
             do {
-                randomIndex = Math.floor(Math.random() * styles.length);
-            } while (randomIndex === lastStyleIndex && styles.length > 1);
+                randomIndex = Math.floor(Math.random() * filters.length);
+            } while (randomIndex === lastFilterIndex && filters.length > 1);
             
-            lastStyleIndex = randomIndex;
-            return styles[randomIndex];
-        }
-
-        /* --- [ГЕОМЕТРИЧЕСКИЕ ДЕФОРМАЦИИ CANVAS] --- */
-        function applyGeometricTransform(type) {
-            if (!originalImageObject.src) return;
-
-            const ctx = warpCanvas.getContext('2d');
-            const w = 400; 
-            const h = 500;
-            warpCanvas.width = w;
-            warpCanvas.height = h;
-
-            // Рисуем исходное фото
-            ctx.drawImage(originalImageObject, 0, 0, w, h);
-            const srcData = ctx.getImageData(0, 0, w, h);
-            const dstData = ctx.createImageData(w, h);
-
-            const src = srcData.data;
-            const dst = dstData.data;
-            const centerX = w / 2;
-            const centerY = h / 2;
-            const radius = Math.min(w, h) * 0.48;
-
-            for (let y = 0; y < h; y++) {
-                for (let x = 0; x < w; x++) {
-                    const dx = x - centerX;
-                    const dy = y - centerY;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    let srcX = x;
-                    let srcY = y;
-
-                    if (distance < radius) {
-                        const normDist = distance / radius;
-
-                        if (type === 'fisheye') {
-                            // Рыбий глаз (Сферическая линза)
-                            const factor = Math.sin(normDist * Math.PI / 2);
-                            srcX = centerX + dx * factor;
-                            srcY = centerY + dy * factor;
-                        } else if (type === 'twirl') {
-                            // Спиральный вихрь
-                            const angle = (1 - normDist) * (1 - normDist) * 3.5;
-                            const cosA = Math.cos(angle);
-                            const sinA = Math.sin(angle);
-                            srcX = centerX + (dx * cosA - dy * sinA);
-                            srcY = centerY + (dx * sinA + dy * cosA);
-                        } else if (type === 'wave') {
-                            // Жидкая волна
-                            srcX = x + Math.sin(y / 12) * 16 * (1 - normDist);
-                            srcY = y + Math.cos(x / 12) * 16 * (1 - normDist);
-                        } else if (type === 'vortex') {
-                            // Втягивание в черную дыру
-                            const factor = Math.pow(normDist, 2.2);
-                            srcX = centerX + dx * factor;
-                            srcY = centerY + dy * factor;
-                        }
-                    }
-
-                    srcX = Math.max(0, Math.min(w - 1, Math.round(srcX)));
-                    srcY = Math.max(0, Math.min(h - 1, Math.round(srcY)));
-
-                    const dstIdx = (y * w + x) * 4;
-                    const srcIdx = (srcY * w + srcX) * 4;
-
-                    dst[dstIdx] = src[srcIdx];
-                    dst[dstIdx + 1] = src[srcIdx + 1];
-                    dst[dstIdx + 2] = src[srcIdx + 2];
-                    dst[dstIdx + 3] = src[srcIdx + 3];
-                }
-            }
-
-            ctx.putImageData(dstData, 0, 0);
-            userPhoto.src = warpCanvas.toDataURL('image/jpeg', 0.92);
+            lastFilterIndex = randomIndex;
+            return filters[randomIndex];
         }
 
         /* --- [3D НАКЛОНЫ КАРТОЧКИ] --- */
@@ -543,7 +455,6 @@
         });
 
         uploadBox.addEventListener('click', () => {
-            initAudio();
             fileInput.click();
         });
 
@@ -656,7 +567,7 @@
             card.className = 'card';
             bgGlow.style.background = bgGlowStyles['default'];
             cardContainer.style.transform = 'rotateX(0deg) rotateY(0deg)';
-            lastStyleIndex = -1;
+            lastFilterIndex = -1;
         });
 
         function spawnDice() {
@@ -678,16 +589,12 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                    originalImageObject = new Image();
-                    originalImageObject.onload = () => {
-                        userPhoto.src = originalImageObject.src;
-                        uploadBox.style.display = 'none';
-                        cardContainer.style.display = 'block';
-                        controlsBox.style.display = 'flex';
-                        isPhotoLoaded = true;
-                        startRoulette();
-                    };
-                    originalImageObject.src = event.target.result;
+                    userPhoto.src = event.target.result;
+                    uploadBox.style.display = 'none';
+                    cardContainer.style.display = 'block';
+                    controlsBox.style.display = 'flex';
+                    isPhotoLoaded = true;
+                    startRoulette();
                 };
                 reader.readAsDataURL(file);
             }
@@ -705,8 +612,6 @@
             gameHeader.innerText = 'ВЫПАДАЙЛО';
             card.classList.remove('glitch-active');
 
-            // Восстанавливаем оригинальную картинку перед новой круткой
-            userPhoto.src = originalImageObject.src;
             bgGlow.style.background = bgGlowStyles['default'];
 
             if (typeof confetti === 'function' && confetti.reset) {
@@ -718,14 +623,8 @@
             const maxTicks = 22 + Math.floor(Math.random() * 8);
 
             function roll() {
-                const selectedStyle = getNextStyle();
-                currentWinningStyleKey = selectedStyle.id;
-
-                if (selectedStyle.type === 'color') {
-                    card.className = 'card ' + selectedStyle.id;
-                } else {
-                    card.className = 'card';
-                }
+                currentWinningFilter = getNextFilter();
+                card.className = 'card ' + currentWinningFilter;
 
                 playTickSound();
                 spawnDice();
@@ -735,26 +634,20 @@
                     speed += 14;
                     setTimeout(roll, speed);
                 } else {
-                    finishRoulette(selectedStyle);
+                    finishRoulette();
                 }
             }
             roll();
         }
 
-        function finishRoulette(finalStyle) {
+        function finishRoulette() {
             isSpinning = false;
             spinBtn.disabled = false;
             resetBtn.style.display = 'block';
+            gameHeader.innerText = 'ТВОЙ СТИЛЬ!';
 
-            // Устанавливаем русское название выпавшего стиля в заголовок!
-            gameHeader.innerText = finalStyle.name;
-
-            if (finalStyle.type === 'geo') {
-                applyGeometricTransform(finalStyle.geoType);
-            }
-
-            if (bgGlowStyles[finalStyle.id]) {
-                bgGlow.style.background = bgGlowStyles[finalStyle.id];
+            if (bgGlowStyles[currentWinningFilter]) {
+                bgGlow.style.background = bgGlowStyles[currentWinningFilter];
             }
 
             card.classList.add('glitch-active');
