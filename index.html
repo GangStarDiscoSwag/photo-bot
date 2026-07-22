@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Выпадайло v1.2.6</title>
+    <title>Выпадайло v1.2.7</title>
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -60,7 +60,9 @@
             filter: blur(25px);
             opacity: 0.85;
             animation: rotateBg 15s linear infinite;
-            transition: background 0.3s ease;
+            /* Плавный переход цвета фона на 1 секунду */
+            transition: background 1s ease-in-out;
+            will-change: background;
         }
 
         @keyframes rotateBg {
@@ -340,7 +342,7 @@
         <div class="welcome-title">ВЫПАДАЙЛО</div>
         <div class="welcome-subtitle">испытай удачу</div>
         <button class="btn-start-main" id="startMainBtn">Начать</button>
-        <div class="version-start">Выпадайло v1.2.6</div>
+        <div class="version-start">Выпадайло v1.2.7</div>
     </div>
 
     <div class="game-screen" id="gameScreen">
@@ -393,6 +395,7 @@
         let isPhotoLoaded = false;
         let audioCtx = null;
         let isSpinning = false;
+        let currentWinningFilter = '';
 
         const filters = [
             'filter-cyberpunk', 
@@ -406,7 +409,6 @@
             'filter-amber'
         ];
 
-        // Карта фоновых градиентов под каждый фильтр
         const bgGlowStyles = {
             'filter-cyberpunk': 'radial-gradient(circle, rgba(255, 0, 127, 0.7) 0%, rgba(0, 255, 255, 0.5) 45%, #120524 80%), conic-gradient(from 0deg, #ff007f, #00ffff, #ff007f)',
             'filter-matrix': 'radial-gradient(circle, rgba(0, 255, 65, 0.7) 0%, rgba(0, 50, 0, 0.6) 50%, #051405 80%), conic-gradient(from 0deg, #00ff41, #003b00, #00ff41)',
@@ -569,6 +571,9 @@
             gameHeader.innerText = 'ВЫПАДАЙЛО';
             card.classList.remove('glitch-active');
 
+            // Возвращаем фону базовый вид на время вращения
+            bgGlow.style.background = bgGlowStyles['default'];
+
             if (typeof confetti === 'function' && confetti.reset) {
                 confetti.reset();
             }
@@ -578,13 +583,8 @@
             const maxTicks = 22 + Math.floor(Math.random() * 8);
 
             function roll() {
-                const nextFilter = getNextFilter();
-                card.className = 'card ' + nextFilter;
-                
-                // Менять цвет фона под текущий фильтр
-                if (bgGlowStyles[nextFilter]) {
-                    bgGlow.style.background = bgGlowStyles[nextFilter];
-                }
+                currentWinningFilter = getNextFilter();
+                card.className = 'card ' + currentWinningFilter;
 
                 playTickSound();
                 spawnDice();
@@ -605,6 +605,11 @@
             spinBtn.disabled = false;
             resetBtn.style.display = 'block';
             gameHeader.innerText = 'ТВОЙ СТИЛЬ!';
+
+            // Плавное переключение фона под победивший стиль
+            if (bgGlowStyles[currentWinningFilter]) {
+                bgGlow.style.background = bgGlowStyles[currentWinningFilter];
+            }
 
             card.classList.add('glitch-active');
             playWinSound();
