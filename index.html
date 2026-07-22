@@ -440,7 +440,7 @@
             osc.type = 'sine';
             osc.frequency.setValueAtTime(440, now);
             osc.frequency.setValueAtTime(659.25, now + 0.15);
-            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.setValueAtTime(0.5, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
@@ -489,7 +489,7 @@
             const gain = audioCtx.createGain();
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.11, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
@@ -505,8 +505,8 @@
             const gain1 = audioCtx.createGain();
             osc1.type = 'triangle';
             osc1.frequency.setValueAtTime(523.25, now);
-            gain1.gain.setValueAtTime(0.15, now);
-            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            gain1.gain.setValueAtTime(0.22, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
             osc1.connect(gain1);
             gain1.connect(audioCtx.destination);
             osc1.start(now);
