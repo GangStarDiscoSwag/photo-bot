@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Выпадайло</title>
+    <title>Выпадайло v1.2.9</title>
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -194,7 +194,7 @@
             gap: 8px;
         }
 
-        /* [BLOCK_5: CARD & NEON GLOW WITH 3D] */
+        /* [BLOCK_5: CARD & NEON GLOW WITH FIXED BOUNDS] */
         .card-container {
             width: 270px;
             height: 350px;
@@ -230,14 +230,15 @@
             z-index: 1;
         }
 
+        /* Четкое позиционирование картинки без сдвигов и вылетов */
         .card img {
-            width: 112%;
-            height: 112%;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
             position: absolute;
-            top: -6%;
-            left: -6%;
-            will-change: transform;
+            top: 0;
+            left: 0;
+            display: block;
         }
 
         .card.glitch-active img {
@@ -246,10 +247,10 @@
 
         @keyframes glitchFx {
             0% { transform: translate3d(0, 0, 0) scale(1); filter: brightness(1.8) contrast(1.5); }
-            20% { transform: translate3d(-6px, 4px, 0) scale(1.03); filter: hue-rotate(90deg) brightness(2); }
-            40% { transform: translate3d(6px, -4px, 0) scale(0.98); filter: invert(0.2) contrast(2); }
-            60% { transform: translate3d(-4px, -2px, 0) scale(1.02); }
-            80% { transform: translate3d(3px, 2px, 0) scale(1.01); }
+            20% { transform: translate3d(-4px, 2px, 0) scale(1.02); filter: hue-rotate(90deg) brightness(2); }
+            40% { transform: translate3d(4px, -2px, 0) scale(0.99); filter: invert(0.2) contrast(2); }
+            60% { transform: translate3d(-2px, -1px, 0) scale(1.01); }
+            80% { transform: translate3d(2px, 1px, 0) scale(1); }
             100% { transform: translate3d(0, 0, 0) scale(1); }
         }
 
@@ -340,7 +341,7 @@
         <div class="welcome-title">ВЫПАДАЙЛО</div>
         <div class="welcome-subtitle">испытай удачу</div>
         <button class="btn-start-main" id="startMainBtn">Начать</button>
-        <div class="version-start">Выпадайло</div>
+        <div class="version-start">Выпадайло v1.2.9</div>
     </div>
 
     <div class="game-screen" id="gameScreen">
@@ -456,7 +457,6 @@
             warpCanvas.width = w;
             warpCanvas.height = h;
 
-            // Рисуем исходное фото
             ctx.drawImage(originalImageObject, 0, 0, w, h);
             const srcData = ctx.getImageData(0, 0, w, h);
             const dstData = ctx.createImageData(w, h);
@@ -479,23 +479,19 @@
                         const normDist = distance / radius;
 
                         if (type === 'fisheye') {
-                            // Рыбий глаз (Сферическая линза)
                             const factor = Math.sin(normDist * Math.PI / 2);
                             srcX = centerX + dx * factor;
                             srcY = centerY + dy * factor;
                         } else if (type === 'twirl') {
-                            // Спиральный вихрь
                             const angle = (1 - normDist) * (1 - normDist) * 3.5;
                             const cosA = Math.cos(angle);
                             const sinA = Math.sin(angle);
                             srcX = centerX + (dx * cosA - dy * sinA);
                             srcY = centerY + (dx * sinA + dy * cosA);
                         } else if (type === 'wave') {
-                            // Жидкая волна
                             srcX = x + Math.sin(y / 12) * 16 * (1 - normDist);
                             srcY = y + Math.cos(x / 12) * 16 * (1 - normDist);
                         } else if (type === 'vortex') {
-                            // Втягивание в черную дыру
                             const factor = Math.pow(normDist, 2.2);
                             srcX = centerX + dx * factor;
                             srcY = centerY + dy * factor;
@@ -525,7 +521,6 @@
             const clampedY = Math.max(-28, Math.min(28, rotateY));
             
             cardContainer.style.transform = `rotateX(${clampedX}deg) rotateY(${clampedY}deg)`;
-            userPhoto.style.transform = `translate3d(${-clampedY * 0.8}px, ${clampedX * 0.8}px, 0)`;
         }
 
         window.addEventListener('deviceorientation', (e) => {
@@ -705,7 +700,6 @@
             gameHeader.innerText = 'ВЫПАДАЙЛО';
             card.classList.remove('glitch-active');
 
-            // Восстанавливаем оригинальную картинку перед новой круткой
             userPhoto.src = originalImageObject.src;
             bgGlow.style.background = bgGlowStyles['default'];
 
@@ -746,7 +740,6 @@
             spinBtn.disabled = false;
             resetBtn.style.display = 'block';
 
-            // Устанавливаем русское название выпавшего стиля в заголовок!
             gameHeader.innerText = finalStyle.name;
 
             if (finalStyle.type === 'geo') {
